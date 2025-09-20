@@ -1,0 +1,853 @@
+USE indianarmy;
+
+-- Table: officers
+-- SELECT queries
+SELECT name, rank, age FROM officers WHERE name LIKE 'A%' ORDER BY name;
+SELECT rank, COUNT(*) AS count_officers FROM officers GROUP BY rank HAVING COUNT(*) > 1;
+SELECT name, CASE WHEN age > 40 THEN 'Senior Officer' ELSE 'Junior Officer' END AS level FROM officers ORDER BY age DESC;
+SELECT * FROM officers WHERE commission_date BETWEEN '2000-01-01' AND '2010-12-31';
+SELECT * FROM officers WHERE branch IN ('Infantry', 'Engineering');
+
+-- RENAME queries
+ALTER TABLE officers RENAME COLUMN name TO full_name;
+ALTER TABLE officers RENAME COLUMN rank TO officer_rank;
+ALTER TABLE officers RENAME COLUMN contact_number TO phone;
+ALTER TABLE officers RENAME COLUMN email TO email_address;
+ALTER TABLE officers RENAME TO army_officers;
+
+-- ALTER queries
+ALTER TABLE army_officers ADD COLUMN salary DECIMAL(10,2) DEFAULT 50000;
+ALTER TABLE army_officers ADD UNIQUE (email_address);
+ALTER TABLE army_officers DROP COLUMN posting_location;
+ALTER TABLE army_officers MODIFY COLUMN commission_date DATE NOT NULL;
+ALTER TABLE army_officers ADD INDEX idx_officers_age (age);
+
+-- DELETE queries
+DELETE FROM army_officers WHERE gender = 'F';
+DELETE FROM army_officers WHERE rank IN ('Major','Colonel','Brigadier');
+DELETE a FROM army_officers AS a JOIN events AS e ON a.full_name = e.organized_by WHERE e.status = 'Scheduled';
+DELETE FROM army_officers WHERE age BETWEEN 30 AND 40;
+DELETE FROM army_officers WHERE officer_id NOT IN (SELECT soldier_id FROM soldiers);
+
+-- UPDATE queries
+UPDATE army_officers SET age = age + 1 WHERE officer_rank = 'Captain';
+UPDATE army_officers SET branch = CASE WHEN gender = 'M' THEN 'Armored' ELSE branch END;
+UPDATE army_officers SET full_name = CONCAT(full_name, ' (Veteran)') WHERE commission_date < '2010-01-01';
+UPDATE army_officers SET commission_date = DATE_ADD(commission_date, INTERVAL 100 DAY) WHERE gender = 'F';
+UPDATE army_officers o JOIN promotions p ON o.officer_rank = p.old_rank SET o.officer_rank = p.new_rank WHERE p.status = 'Approved';
+
+-- Table: soldiers
+-- SELECT queries
+SELECT unit, COUNT(*) AS num_soldiers FROM soldiers GROUP BY unit HAVING COUNT(*) > 2;
+SELECT s.name, p.new_rank FROM soldiers AS s LEFT JOIN promotions AS p ON s.soldier_id = p.soldier_id;
+SELECT name, CASE WHEN gender='M' THEN 'Male' ELSE 'Female' END AS gender_full FROM soldiers ORDER BY name;
+SELECT * FROM soldiers WHERE join_date BETWEEN '2015-01-01' AND '2018-12-31';
+SELECT * FROM soldiers WHERE rank IN ('Naik','Sepoy');
+
+-- RENAME queries
+ALTER TABLE soldiers RENAME COLUMN name TO full_name;
+ALTER TABLE soldiers RENAME COLUMN rank TO soldier_rank;
+ALTER TABLE soldiers RENAME COLUMN contact_number TO phone;
+ALTER TABLE soldiers RENAME COLUMN join_date TO enlist_date;
+ALTER TABLE soldiers RENAME TO army_soldiers;
+
+-- ALTER queries
+ALTER TABLE army_soldiers ADD COLUMN salary DECIMAL(10,2) DEFAULT 30000;
+ALTER TABLE army_soldiers ADD UNIQUE (email);
+ALTER TABLE army_soldiers DROP COLUMN posting_location;
+ALTER TABLE army_soldiers MODIFY COLUMN age SMALLINT NOT NULL;
+ALTER TABLE army_soldiers ADD INDEX idx_soldier_unit (unit, soldier_rank);
+-- DELETE queries
+DELETE FROM army_soldiers WHERE gender = 'M';
+DELETE FROM army_soldiers WHERE age > 30;
+DELETE s FROM army_soldiers AS s JOIN leave_records AS l ON s.soldier_id = l.soldier_id WHERE l.status = 'Approved';
+DELETE FROM army_soldiers WHERE enlist_date < '2015-01-01';
+DELETE FROM army_soldiers WHERE unit LIKE '%Reserve%';
+
+-- UPDATE queries
+UPDATE army_soldiers SET soldier_rank = CASE WHEN age > 30 THEN 'Lance Naik' ELSE soldier_rank END;
+UPDATE army_soldiers SET age = age + 1 WHERE unit = '1st Battalion';
+UPDATE army_soldiers SET email = LOWER(email);
+UPDATE army_soldiers SET phone = CONCAT('+91-', phone) WHERE phone IS NOT NULL;
+UPDATE army_soldiers s JOIN leave_records l ON s.soldier_id = l.soldier_id SET s.unit = CONCAT(s.unit, ' (On Leave)') WHERE l.type = 'Emergency Leave';
+
+-- Table: battalions
+-- SELECT queries
+SELECT region, AVG(soldiers_count) AS avg_soldiers FROM battalions GROUP BY region HAVING AVG(soldiers_count) > 600;
+SELECT name, CASE WHEN status='Active' THEN 'Active Unit' ELSE 'Inactive Unit' END AS unit_status FROM battalions;
+SELECT * FROM battalions WHERE creation_date BETWEEN '1990-01-01' AND '2000-12-31';
+SELECT * FROM battalions WHERE vehicles_count > 50;
+SELECT b.name, COUNT(s.soldier_id) AS soldier_count 
+  FROM battalions AS b LEFT JOIN soldiers AS s ON s.unit = b.name 
+  GROUP BY b.name;
+
+-- RENAME queries
+ALTER TABLE battalions RENAME COLUMN name TO battalion_name;
+ALTER TABLE battalions RENAME COLUMN commander TO commander_name;
+ALTER TABLE battalions RENAME COLUMN region TO region_name;
+ALTER TABLE battalions RENAME COLUMN status TO current_status;
+ALTER TABLE battalions RENAME TO army_battalions;
+
+-- ALTER queries
+ALTER TABLE army_battalions ADD COLUMN headquarters VARCHAR(100) DEFAULT 'HQ';
+ALTER TABLE army_battalions ADD UNIQUE (battalion_name);
+ALTER TABLE army_battalions DROP COLUMN remarks;
+ALTER TABLE army_battalions MODIFY COLUMN vehicles_count SMALLINT;
+ALTER TABLE army_battalions ADD INDEX idx_battalion_region(region_name);
+
+-- DELETE queries
+DELETE FROM army_battalions WHERE current_status = 'Inactive';
+DELETE FROM army_battalions WHERE soldiers_count < 500;
+DELETE b FROM army_battalions AS b JOIN vehicles AS v ON v.assigned_unit = b.battalion_name WHERE v.status = 'Inactive';
+DELETE FROM army_battalions WHERE creation_date < '2000-01-01';
+DELETE FROM army_battalions WHERE location LIKE '%Guard%';
+
+-- UPDATE queries
+UPDATE army_battalions SET current_status = 'Inactive' WHERE soldiers_count < 600;
+UPDATE army_battalions SET vehicles_count = vehicles_count + 5;
+UPDATE army_battalions SET region_name = 'Northern Command' WHERE location IN ('Srinagar','Udhampur');
+UPDATE army_battalions SET battalion_name = CONCAT('The ', battalion_name) WHERE current_status = 'Active';
+UPDATE army_battalions b JOIN vehicles v ON b.battalion_name = v.assigned_unit 
+  SET b.vehicles_count = b.vehicles_count - 1 WHERE v.status = 'Decommissioned';
+
+-- Table: training_centers
+
+-- SELECT queries
+SELECT location, COUNT(*) AS num_centers FROM training_centers GROUP BY location HAVING COUNT(*) > 1;
+SELECT center_id, courses_offered FROM training_centers WHERE courses_offered LIKE '%Warfare%';
+SELECT * FROM training_centers WHERE established_year BETWEEN 1950 AND 2000;
+SELECT name, CASE WHEN status='Active' THEN 'Operational' ELSE 'Not Operational' END AS ops_status FROM training_centers;
+SELECT * FROM training_centers WHERE center_id IN (SELECT training_id FROM training_records WHERE result = 'Failed');
+
+-- RENAME queries
+ALTER TABLE training_centers RENAME COLUMN name TO center_name;
+ALTER TABLE training_centers RENAME COLUMN established_year TO year_established;
+ALTER TABLE training_centers RENAME COLUMN in_charge TO director;
+ALTER TABLE training_centers RENAME COLUMN courses_offered TO course_list;
+ALTER TABLE training_centers RENAME TO training_facilities;
+
+-- ALTER queries
+ALTER TABLE training_facilities ADD COLUMN rating INT DEFAULT 3;
+ALTER TABLE training_facilities ADD UNIQUE (center_name);
+ALTER TABLE training_facilities DROP COLUMN contact_email;
+ALTER TABLE training_facilities MODIFY COLUMN phone_number VARCHAR(20);
+ALTER TABLE training_facilities ADD INDEX idx_training_location (location);
+
+-- DELETE queries
+DELETE FROM training_facilities WHERE status = 'Inactive';
+DELETE FROM training_facilities WHERE year_established < 1950;
+DELETE tc FROM training_facilities AS tc JOIN missions AS m ON tc.location = m.location WHERE m.status = 'Canceled';
+DELETE FROM training_facilities WHERE center_id IN (SELECT training_id FROM training_records WHERE certification_status = 'Pending');
+DELETE FROM training_facilities WHERE center_name LIKE '%College%';
+
+-- UPDATE queries
+UPDATE training_facilities SET trainee_capacity = trainee_capacity + 100;
+UPDATE training_facilities SET status = 'Closed' WHERE year_established < 1950;
+UPDATE training_facilities SET name = CONCAT(name,' Academy') WHERE location LIKE '%Maharashtra';
+UPDATE training_facilities SET contact_email = LOWER(CONCAT('info_', center_id, '@army.in'));
+UPDATE training_facilities t JOIN events e ON e.location LIKE CONCAT('%', t.location, '%') 
+  SET t.status = 'Busy' WHERE e.status = 'Scheduled';
+
+-- Table: weapons
+
+-- SELECT queries
+SELECT type, SUM(quantity) AS total_weapons FROM weapons GROUP BY type;
+SELECT * FROM weapons WHERE name LIKE '%Rifle%' ORDER BY range_km DESC;
+SELECT * FROM weapons WHERE range_km BETWEEN 1.0 AND 50.0;
+SELECT name, CASE WHEN status='Active' THEN 'In Service' ELSE 'Out of Service' END AS availability FROM weapons;
+SELECT * FROM weapons WHERE assigned_unit IN ('2nd Infantry Battalion','3rd Armoured Battalion');
+
+-- RENAME queries
+ALTER TABLE weapons RENAME COLUMN name TO weapon_name;
+ALTER TABLE weapons RENAME COLUMN manufacturer TO maker;
+ALTER TABLE weapons RENAME COLUMN range_km TO effective_range;
+ALTER TABLE weapons RENAME COLUMN assigned_unit TO unit_assigned;
+ALTER TABLE weapons RENAME TO arms_inventory_db;
+
+-- ALTER queries
+ALTER TABLE arms_inventory_db ADD COLUMN caliber VARCHAR(20) DEFAULT 'Unknown';
+ALTER TABLE arms_inventory_db ADD UNIQUE (weapon_name);
+ALTER TABLE arms_inventory_db DROP COLUMN remarks;
+ALTER TABLE arms_inventory_db MODIFY COLUMN quantity SMALLINT;
+ALTER TABLE arms_inventory_db ADD INDEX idx_weapon_type (type);
+
+-- DELETE queries
+DELETE FROM arms_inventory_db WHERE status = 'Decommissioned';
+DELETE FROM arms_inventory_db WHERE quantity = 0;
+DELETE a FROM arms_inventory_db AS a JOIN promotions AS p ON a.weapon_id = p.soldier_id WHERE p.status='Approved';
+DELETE FROM arms_inventory_db WHERE weapon_id IN (SELECT equipment_id FROM equipment_inventory WHERE condition_status='Needs Repair');
+DELETE FROM arms_inventory_db WHERE type = 'Launcher';
+
+-- UPDATE queries
+UPDATE arms_inventory_db SET status = 'Out of Service' WHERE quantity < 10;
+UPDATE arms_inventory_db SET remarks = CONCAT(remarks, ' (Checked)') WHERE last_checked < '2025-01-01';
+UPDATE arms_inventory_db SET quantity = quantity + 50 WHERE type = 'Ammunition';
+UPDATE arms_inventory_db SET maker = UPPER(maker);
+UPDATE arms_inventory_db a JOIN vehicles v ON a.assigned_unit = v.assigned_unit 
+  SET a.condition = 'Under Maintenance' WHERE v.status = 'Inactive';
+
+-- Table: missions
+
+-- SELECT queries
+SELECT status, COUNT(*) AS num_missions FROM missions GROUP BY status;
+SELECT * FROM missions WHERE type IN ('Combat','Reconnaissance');
+SELECT name, DATE_ADD(start_date, INTERVAL 7 DAY) AS one_week_after FROM missions;
+SELECT * FROM missions WHERE objective LIKE '%support%';
+SELECT * FROM missions WHERE start_date BETWEEN '2023-01-01' AND '2023-12-31';
+
+-- RENAME queries
+ALTER TABLE missions RENAME COLUMN name TO mission_name;
+ALTER TABLE missions RENAME COLUMN type TO mission_type;
+ALTER TABLE missions RENAME COLUMN commander TO mission_leader;
+ALTER TABLE missions RENAME COLUMN objective TO mission_objective;
+ALTER TABLE missions RENAME TO active_operations;
+
+-- ALTER queries
+ALTER TABLE active_operations ADD COLUMN mission_code VARCHAR(10) UNIQUE;
+ALTER TABLE active_operations DROP COLUMN remarks;
+ALTER TABLE active_operations ADD INDEX idx_mission_status (status);
+ALTER TABLE active_operations MODIFY COLUMN status VARCHAR(50) NOT NULL DEFAULT 'Planned';
+ALTER TABLE active_operations ADD COLUMN duration_days INT;
+
+-- DELETE queries
+DELETE FROM active_operations WHERE status = 'Canceled';
+DELETE FROM active_operations WHERE start_date < '2023-01-01';
+DELETE m FROM active_operations AS m JOIN missions AS m2 ON m.mission_id = m2.mission_id WHERE m2.status = 'Completed';
+DELETE FROM active_operations WHERE mission_id IN (SELECT training_id FROM training_records WHERE certification_status='Not Certified');
+DELETE FROM active_operations WHERE mission_type LIKE '%Drill%';
+
+-- UPDATE queries
+UPDATE active_operations SET status = 'Closed' WHERE status = 'Completed';
+UPDATE active_operations SET end_date = DATE_ADD(start_date, INTERVAL 14 DAY) WHERE end_date IS NULL;
+UPDATE active_operations SET mission_leader = 'Col. ' || mission_leader WHERE status = 'Active';
+UPDATE active_operations SET objective = CONCAT(objective, ' [Evaluated]') WHERE status = 'Completed';
+UPDATE active_operations SET mission_type = 'Special Ops' WHERE mission_type = 'Special Forces';
+
+-- Table: vehicles
+
+-- SELECT queries
+SELECT type, AVG(capacity) AS avg_capacity FROM vehicles GROUP BY type;
+SELECT * FROM vehicles WHERE name LIKE '%Tata%';
+SELECT * FROM vehicles WHERE in_service_date BETWEEN '2015-01-01' AND '2020-12-31';
+SELECT name, CASE WHEN status='Active' THEN 'Operational' ELSE 'Non-Operational' END AS vehicle_status FROM vehicles;
+SELECT * FROM vehicles WHERE assigned_unit = 'Supply Unit Bravo';
+
+-- RENAME queries
+ALTER TABLE vehicles RENAME COLUMN name TO vehicle_name;
+ALTER TABLE vehicles RENAME COLUMN registration_no TO reg_number;
+ALTER TABLE vehicles RENAME COLUMN assigned_unit TO unit_assigned;
+ALTER TABLE vehicles RENAME COLUMN in_service_date TO service_date;
+ALTER TABLE vehicles RENAME TO fleet_vehicles;
+
+-- ALTER queries
+ALTER TABLE fleet_vehicles ADD COLUMN fuel_type VARCHAR(20) DEFAULT 'Diesel';
+ALTER TABLE fleet_vehicles DROP COLUMN remarks;
+ALTER TABLE fleet_vehicles ADD INDEX idx_vehicle_type (type);
+ALTER TABLE fleet_vehicles MODIFY COLUMN capacity SMALLINT;
+ALTER TABLE fleet_vehicles ADD COLUMN last_maintenance DATE;
+
+-- DELETE queries
+DELETE FROM fleet_vehicles WHERE status = 'Inactive';
+DELETE FROM fleet_vehicles WHERE capacity < 5;
+DELETE v FROM fleet_vehicles AS v JOIN logistics AS l ON v.vehicle_id = l.logistic_id WHERE l.category = 'Fuel';
+DELETE FROM fleet_vehicles WHERE name LIKE '%Ambulance%';
+DELETE FROM fleet_vehicles WHERE service_date < '2010-01-01';
+
+-- UPDATE queries
+UPDATE fleet_vehicles SET status = 'Under Maintenance' WHERE status = 'Active' AND capacity > 20;
+UPDATE fleet_vehicles SET unit_assigned = CONCAT(unit_assigned, ' (Logistics)') WHERE type = 'Truck';
+UPDATE fleet_vehicles SET fuel_type = 'Electric' WHERE model LIKE '%GS800%';
+UPDATE fleet_vehicles SET reg_number = CONCAT(reg_number, '-IND') WHERE reg_number NOT LIKE 'IND%';
+UPDATE fleet_vehicles f JOIN missions m ON f.assigned_unit = m.commander SET f.status = 'Deployed' WHERE m.status = 'Ongoing';
+
+-- Table: medical_records
+
+-- SELECT queries
+SELECT blood_group, COUNT(*) AS count_group FROM medical_records GROUP BY blood_group;
+SELECT * FROM medical_records WHERE weight LIKE '%kg' AND eye_sight = '6/6';
+SELECT record_id, doctor, CASE WHEN allergies = 'None' THEN 'Clean Record' ELSE 'Has Allergies' END AS allergy_status FROM medical_records;
+SELECT * FROM medical_records WHERE last_checkup BETWEEN '2024-01-01' AND '2024-12-31';
+SELECT * FROM medical_records WHERE injuries LIKE '%fract%';
+
+-- RENAME queries
+ALTER TABLE medical_records RENAME COLUMN height TO height_in;
+ALTER TABLE medical_records RENAME COLUMN weight TO weight_lb;
+ALTER TABLE medical_records RENAME COLUMN eye_sight TO vision;
+ALTER TABLE medical_records RENAME COLUMN doctor TO physician;
+ALTER TABLE medical_records RENAME TO medical_records_text;
+
+-- ALTER queries
+ALTER TABLE medical_records_text ADD COLUMN blood_pressure_systolic INT;
+ALTER TABLE medical_records_text ADD INDEX idx_medical_group (blood_group);
+ALTER TABLE medical_records_text DROP COLUMN remarks;
+ALTER TABLE medical_records_text MODIFY COLUMN last_checkup DATETIME;
+ALTER TABLE medical_records_text ADD COLUMN update_date DATE;
+
+-- DELETE queries
+DELETE FROM medical_records_text WHERE blood_group = 'AB-';
+DELETE FROM medical_records_text WHERE allergies = 'Peanuts';
+DELETE mr FROM medical_records_text AS mr JOIN soldiers AS s ON mr.soldier_id = s.soldier_id WHERE s.gender = 'F';
+DELETE FROM medical_records_text WHERE injuries LIKE '%sprain%';
+DELETE FROM medical_records_text WHERE record_id IN (SELECT training_id FROM training_records WHERE certification_status = 'Expired');
+
+-- UPDATE queries
+UPDATE medical_records_text SET blood_group = 'O-' WHERE blood_group = 'O+';
+UPDATE medical_records_text SET allergies = 'None' WHERE allergies IS NULL;
+UPDATE medical_records_text SET doctor_name = CONCAT(doctor_name, ', MD');
+UPDATE medical_records_text SET weight_kg = weight_kg + 5 WHERE weight_kg < 60;
+UPDATE medical_records_text m JOIN soldiers s ON m.soldier_id = s.soldier_id SET m.doctor_name = 'Dr. X. Yadav' WHERE s.unit = 'Medical Unit';
+
+-- Table: leave_records
+
+-- SELECT queries
+SELECT type, COUNT(*) AS num_leaves FROM leave_records GROUP BY type;
+SELECT * FROM leave_records WHERE status = 'Approved' ORDER BY start_date;
+SELECT soldier_id, (end_date - start_date) AS leave_duration FROM leave_records;
+SELECT * FROM leave_records WHERE reason LIKE '%family%';
+SELECT * FROM leave_records WHERE start_date BETWEEN '2025-01-01' AND '2025-03-31';
+
+-- RENAME queries
+ALTER TABLE leave_records RENAME COLUMN start_date TO leave_start;
+ALTER TABLE leave_records RENAME COLUMN end_date TO leave_end;
+ALTER TABLE leave_records RENAME COLUMN approved_by TO approver;
+ALTER TABLE leave_records RENAME COLUMN application_date TO request_date;
+ALTER TABLE leave_records RENAME TO leave_applications;
+
+-- ALTER queries
+ALTER TABLE leave_applications ADD COLUMN priority VARCHAR(20) DEFAULT 'Normal';
+ALTER TABLE leave_applications ADD INDEX idx_leave_status (status);
+ALTER TABLE leave_applications DROP COLUMN remarks;
+ALTER TABLE leave_applications MODIFY COLUMN type VARCHAR(50) NOT NULL;
+ALTER TABLE leave_applications ADD COLUMN approval_date DATE;
+
+-- DELETE queries
+DELETE FROM leave_applications WHERE status = 'Pending';
+DELETE FROM leave_applications WHERE soldier_id IN (SELECT soldier_id FROM disciplinary_actions WHERE status='Closed');
+DELETE l FROM leave_applications AS l JOIN soldiers AS s ON l.soldier_id = s.soldier_id WHERE s.gender = 'M';
+DELETE FROM leave_applications WHERE type = 'Emergency';
+DELETE FROM leave_applications WHERE request_date < '2024-12-01';
+
+-- UPDATE queries
+UPDATE leave_applications SET status = 'Expired' WHERE end_date < '2024-12-01';
+UPDATE leave_applications SET type = 'Casual Leave' WHERE type = 'Casual';
+UPDATE leave_applications SET remarks = CONCAT(remarks, ' (Checked)') WHERE status = 'Approved';
+UPDATE leave_applications l JOIN promotions p ON l.soldier_id = p.soldier_id SET l.status = 'Review' WHERE p.status = 'Pending';
+UPDATE leave_applications SET approved_by = 'Col. Command' WHERE approver IS NULL;
+
+-- Table: promotions
+
+-- SELECT queries
+SELECT old_rank, COUNT(*) AS promotions_count FROM promotions GROUP BY old_rank;
+SELECT * FROM promotions WHERE status = 'Approved';
+SELECT promotion_id, (new_rank = old_rank) AS no_change FROM promotions;
+SELECT * FROM promotions WHERE promotion_date BETWEEN '2023-01-01' AND '2024-12-31';
+SELECT * FROM promotions WHERE reason LIKE '%service%';
+
+-- RENAME queries
+ALTER TABLE promotions RENAME COLUMN old_rank TO previous_rank;
+ALTER TABLE promotions RENAME COLUMN new_rank TO current_rank;
+ALTER TABLE promotions RENAME COLUMN approved_by TO approver;
+ALTER TABLE promotions RENAME COLUMN document_link TO doc_link;
+ALTER TABLE promotions RENAME TO rank_promotions;
+
+-- ALTER queries
+ALTER TABLE rank_promotions ADD COLUMN promotion_type VARCHAR(50);
+ALTER TABLE rank_promotions ADD INDEX idx_promotion_status (status);
+ALTER TABLE rank_promotions DROP COLUMN remarks;
+ALTER TABLE rank_promotions MODIFY COLUMN status VARCHAR(50) NOT NULL DEFAULT 'Pending';
+ALTER TABLE rank_promotions ADD COLUMN review_date DATE;
+
+-- DELETE queries
+DELETE FROM rank_promotions WHERE status = 'Rejected';
+DELETE FROM rank_promotions WHERE promotion_date < '2022-01-01';
+DELETE r FROM rank_promotions AS r JOIN soldiers AS s ON r.soldier_id = s.soldier_id WHERE s.gender = 'F';
+DELETE FROM rank_promotions WHERE old_rank = new_rank;
+DELETE FROM rank_promotions WHERE reason LIKE '%trial%';
+
+
+-- UPDATE queries
+UPDATE rank_promotions SET status = 'Finalized' WHERE status = 'Approved';
+UPDATE rank_promotions SET approver = CONCAT(approver, ' (Reviewed)') WHERE status = 'Approved';
+UPDATE rank_promotions SET reason = CONCAT(reason, ' [Updated]') WHERE status = 'Approved';
+UPDATE rank_promotions p JOIN officers o ON p.approver = o.full_name SET p.status = 'Under Review' WHERE o.branch = 'Infantry';
+UPDATE rank_promotions SET status = 'Approved' WHERE promotion_id IN (1,2,3);
+
+-- Table: events
+
+-- SELECT queries
+SELECT status, COUNT(*) AS num_events FROM events GROUP BY status;
+SELECT * FROM events WHERE type = 'Training' AND status = 'Scheduled';
+SELECT name, CASE WHEN YEAR(date) = 2025 THEN '2025 Event' ELSE 'Other Year' END AS event_year FROM events;
+SELECT * FROM events WHERE location LIKE '%Camp%';
+SELECT * FROM events WHERE organized_by LIKE '%Army%';
+
+-- RENAME queries
+ALTER TABLE events RENAME COLUMN organized_by TO organizer;
+ALTER TABLE events RENAME COLUMN contact_person TO contact_name;
+ALTER TABLE events RENAME COLUMN phone TO contact_phone;
+ALTER TABLE events RENAME COLUMN status TO event_status;
+ALTER TABLE events RENAME TO army_events;
+
+-- ALTER queries
+ALTER TABLE army_events ADD COLUMN event_code VARCHAR(10) UNIQUE;
+ALTER TABLE army_events ADD INDEX idx_events_date (date);
+ALTER TABLE army_events DROP COLUMN description;
+ALTER TABLE army_events MODIFY COLUMN event_status VARCHAR(50) DEFAULT 'Planned';
+ALTER TABLE army_events ADD COLUMN attendees INT;
+
+-- DELETE queries
+DELETE FROM army_events WHERE event_status = 'Completed';
+DELETE FROM army_events WHERE event_id IN (SELECT training_id FROM training_records WHERE certification_status = 'Revoked');
+DELETE e FROM army_events AS e JOIN missions AS m ON e.name = m.name WHERE m.type = 'Training';
+DELETE FROM army_events WHERE date < '2025-01-01';
+DELETE FROM army_events WHERE type = 'Ceremonial' AND location LIKE '%Memorial%';
+
+-- UPDATE queries
+UPDATE army_events SET event_status = 'Canceled' WHERE date < '2025-01-01' AND event_status = 'Scheduled';
+UPDATE army_events SET location = CONCAT(location, ' (Tent)') WHERE type = 'Ceremonial';
+UPDATE army_events SET name = CONCAT(name, ' - 2025') WHERE YEAR(date) = 2025;
+UPDATE army_events e JOIN logistics l ON e.name = l.item_name SET e.event_status = 'Postponed' WHERE l.status = 'In Transit';
+UPDATE army_events SET attendees = 500 WHERE type = 'Ceremonial';
+
+-- Table: disciplinary_actions
+
+-- SELECT queries
+SELECT action_type, COUNT(*) AS occurrences FROM disciplinary_actions GROUP BY action_type;
+SELECT * FROM disciplinary_actions WHERE status = 'Closed' AND punishment LIKE '%warning%';
+SELECT soldier_id, CASE WHEN status='Closed' THEN 'Done' ELSE 'Pending' END AS action_status FROM disciplinary_actions;
+SELECT * FROM disciplinary_actions WHERE date BETWEEN '2025-01-01' AND '2025-03-31';
+SELECT * FROM disciplinary_actions WHERE reason LIKE '%equipment%';
+
+-- RENAME queries
+ALTER TABLE disciplinary_actions RENAME COLUMN action_type TO offense;
+ALTER TABLE disciplinary_actions RENAME COLUMN punished_by TO punisher;
+ALTER TABLE disciplinary_actions RENAME COLUMN reviewed_by TO reviewer;
+ALTER TABLE disciplinary_actions RENAME COLUMN status TO action_status;
+ALTER TABLE disciplinary_actions RENAME TO disciplinary_cases;
+
+-- ALTER queries
+ALTER TABLE disciplinary_cases ADD COLUMN case_code VARCHAR(20) UNIQUE;
+ALTER TABLE disciplinary_cases ADD INDEX idx_case_status (action_status);
+ALTER TABLE disciplinary_cases DROP COLUMN remarks;
+ALTER TABLE disciplinary_cases MODIFY COLUMN action_date DATE NOT NULL;
+ALTER TABLE disciplinary_cases ADD COLUMN resolution_date DATE;
+
+-- DELETE queries
+DELETE FROM disciplinary_cases WHERE action_status = 'Closed';
+DELETE dc FROM disciplinary_cases AS dc JOIN soldiers AS s ON dc.soldier_id = s.soldier_id WHERE s.rank = 'Sepoy';
+DELETE FROM disciplinary_cases WHERE punished_by LIKE 'Brig.%';
+DELETE FROM disciplinary_cases WHERE offense LIKE '%Violation%';
+DELETE FROM disciplinary_cases WHERE date < '2025-01-01';
+
+-- UPDATE queries
+UPDATE disciplinary_cases SET action_status = 'Under Review' WHERE action_status = 'Pending';
+UPDATE disciplinary_cases SET punishment = CONCAT(punishment, ' [Recorded]') WHERE action_status = 'Closed';
+UPDATE disciplinary_cases dc JOIN officers o ON dc.punisher = o.full_name SET dc.action_status = 'Reviewed' WHERE o.branch = 'Artillery';
+UPDATE disciplinary_cases SET reason = CONCAT(reason, ' (Finalized)') WHERE action_status = 'Closed';
+UPDATE disciplinary_cases SET punisher = 'Col. Command' WHERE punisher IS NULL;
+
+-- Table: accommodations
+
+-- SELECT queries
+SELECT status, COUNT(*) AS count_accom FROM accommodations GROUP BY status;
+SELECT * FROM accommodations WHERE status = 'Occupied' AND block = 'Block A';
+SELECT soldier_id, CASE WHEN vacated_date IS NULL THEN 'Currently Occupied' ELSE 'Vacated' END AS occupancy FROM accommodations;
+SELECT * FROM accommodations WHERE assigned_date BETWEEN '2023-01-01' AND '2024-12-31';
+SELECT * FROM accommodations WHERE remarks LIKE '%Assigned%';
+
+-- RENAME queries
+ALTER TABLE accommodations RENAME COLUMN location TO garrison;
+ALTER TABLE accommodations RENAME COLUMN assigned_date TO allot_date;
+ALTER TABLE accommodations RENAME COLUMN vacated_date TO release_date;
+ALTER TABLE accommodations RENAME COLUMN caretaker TO guard;
+ALTER TABLE accommodations RENAME TO lodging;
+
+-- ALTER queries
+ALTER TABLE lodging ADD COLUMN rent DECIMAL(8,2) DEFAULT 0.00;
+ALTER TABLE lodging ADD INDEX idx_accom_status (status);
+ALTER TABLE lodging DROP COLUMN remarks;
+ALTER TABLE lodging MODIFY COLUMN room_no VARCHAR(20);
+ALTER TABLE lodging ADD COLUMN building VARCHAR(50);
+
+-- DELETE queries
+DELETE FROM lodging WHERE status = 'Vacated';
+DELETE l FROM lodging AS l JOIN soldiers AS s ON l.soldier_id = s.soldier_id WHERE s.gender = 'F';
+DELETE FROM lodging WHERE assigned_date < '2022-01-01';
+DELETE FROM lodging WHERE block = 'Block Z';
+DELETE FROM lodging WHERE vacancy_date < '2023-06-01';
+
+-- UPDATE queries
+UPDATE lodging SET status = 'Vacated' WHERE vacated_date < CURDATE();
+UPDATE lodging SET room_no = CONCAT(room_no, '-AC') WHERE status = 'Occupied';
+UPDATE lodging SET block = UPPER(block);
+UPDATE lodging SET guard = CONCAT('Mr. ', guard) WHERE guard IS NOT NULL;
+UPDATE lodging l JOIN support_staff ss ON l.caretaker = ss.name SET l.status = 'Inspected' WHERE ss.department = 'Maintenance';
+
+
+-- Table: payroll
+
+-- SELECT queries
+SELECT status, SUM(net_pay) AS total_paid FROM payroll GROUP BY status;
+SELECT * FROM payroll WHERE month = 'June 2025';
+SELECT payroll_id, (basic_pay+hra+da-deductions) AS calc_net FROM payroll;
+SELECT * FROM payroll WHERE deductions > basic_pay * 0.1;
+SELECT * FROM payroll WHERE processed_date BETWEEN '2025-06-01' AND '2025-06-30';
+
+-- RENAME queries
+ALTER TABLE payroll RENAME COLUMN basic_pay TO base_pay;
+ALTER TABLE payroll RENAME COLUMN hra TO house_allowance;
+ALTER TABLE payroll RENAME COLUMN da TO dearness_allowance;
+ALTER TABLE payroll RENAME COLUMN processed_date TO process_date;
+ALTER TABLE payroll RENAME TO salary_ledger;
+
+-- ALTER queries
+ALTER TABLE salary_ledger ADD COLUMN bank_account VARCHAR(20);
+ALTER TABLE salary_ledger ADD INDEX idx_payroll_status (status);
+ALTER TABLE salary_ledger DROP COLUMN status;
+ALTER TABLE salary_ledger MODIFY COLUMN net_pay DECIMAL(12,2);
+ALTER TABLE salary_ledger ADD COLUMN transfer_date DATE;
+
+-- DELETE queries
+DELETE FROM salary_ledger WHERE deductions > 0.2 * base_pay;
+DELETE sl FROM salary_ledger AS sl JOIN officers AS o ON sl.soldier_id = o.officer_id WHERE o.branch = 'Medical';
+DELETE FROM salary_ledger WHERE net_pay < 30000;
+DELETE FROM salary_ledger WHERE payroll_id IN (SELECT inventory_id FROM arms_inventory WHERE status='Restricted');
+DELETE FROM salary_ledger WHERE month = 'January 2025';
+
+-- UPDATE queries
+UPDATE salary_ledger SET net_pay = base_pay + house_allowance + dearness_allowance - deductions;
+UPDATE salary_ledger SET status = 'Processed' WHERE status IS NULL;
+UPDATE salary_ledger SET month = CONCAT(month, ' - Payroll');
+UPDATE salary_ledger sl JOIN promotions p ON sl.soldier_id = p.soldier_id SET sl.net_pay = sl.net_pay + 1000 WHERE p.status = 'Approved';
+UPDATE salary_ledger SET status = 'Reviewed' WHERE transfer_date < '2025-06-15';
+
+-- Table: arms_inventory
+
+-- SELECT queries
+SELECT condition, COUNT(*) AS count_items FROM arms_inventory GROUP BY condition;
+SELECT * FROM arms_inventory WHERE condition = 'Excellent' ORDER BY last_checked DESC;
+SELECT inventory_id, remarks FROM arms_inventory WHERE remarks LIKE '%issue%';
+SELECT * FROM arms_inventory WHERE last_checked BETWEEN '2025-06-01' AND '2025-06-30';
+SELECT * FROM arms_inventory WHERE type = 'Ammunition';
+
+-- RENAME queries
+ALTER TABLE arms_inventory RENAME COLUMN item_name TO equipment_name;
+ALTER TABLE arms_inventory RENAME COLUMN checked_by TO inspector;
+ALTER TABLE arms_inventory RENAME COLUMN last_checked TO last_inspection;
+ALTER TABLE arms_inventory RENAME COLUMN condition TO item_condition;
+ALTER TABLE arms_inventory RENAME TO armory_inventory;
+
+-- ALTER queries
+ALTER TABLE armory_inventory ADD COLUMN threshold INT DEFAULT 0;
+ALTER TABLE armory_inventory ADD INDEX idx_inventory_status (status);
+ALTER TABLE armory_inventory DROP COLUMN remarks;
+ALTER TABLE armory_inventory MODIFY COLUMN quantity SMALLINT;
+ALTER TABLE armory_inventory ADD COLUMN next_check DATE;
+
+-- DELETE queries
+DELETE FROM armory_inventory WHERE item_condition = 'Poor';
+DELETE ai FROM armory_inventory AS ai JOIN logistics AS l ON ai.inventory_id = l.logistic_id WHERE l.category = 'Ammunition';
+DELETE FROM armory_inventory WHERE last_inspection < '2025-01-01';
+DELETE FROM armory_inventory WHERE status = 'Restricted';
+DELETE FROM armory_inventory WHERE type = 'Explosive' AND quantity < 50;
+
+-- UPDATE queries
+UPDATE armory_inventory SET status = 'Needs Repair' WHERE item_condition = 'Fair';
+UPDATE armory_inventory SET quantity = quantity + 100 WHERE equipment_name LIKE '%Ammunition%';
+UPDATE armory_inventory SET item_condition = 'Excellent' WHERE item_condition IS NULL;
+UPDATE armory_inventory ai JOIN weapons w ON ai.equipment_name = w.name SET ai.status = 'Checked' WHERE w.status = 'Active';
+UPDATE armory_inventory SET last_check = DATE_ADD(last_inspection, INTERVAL 180 DAY);
+
+-- Table: comm_channels
+
+-- SELECT queries
+SELECT type, COUNT(*) AS count_channels FROM comm_channels GROUP BY type;
+SELECT * FROM comm_channels WHERE status = 'Under Maintenance';
+SELECT name, CASE WHEN range_km > 100 THEN 'Long Range' ELSE 'Short Range' END AS range_type FROM comm_channels;
+SELECT * FROM comm_channels WHERE last_maintenance BETWEEN '2025-06-01' AND '2025-06-30';
+SELECT * FROM comm_channels WHERE frequency LIKE '13 GHz';
+
+-- RENAME queries
+ALTER TABLE comm_channels RENAME COLUMN name TO channel_name;
+ALTER TABLE comm_channels RENAME COLUMN last_maintenance TO maintenance_date;
+ALTER TABLE comm_channels RENAME COLUMN assigned_unit TO unit_assigned;
+ALTER TABLE comm_channels RENAME COLUMN technician TO tech_responsible;
+ALTER TABLE comm_channels RENAME TO communications;
+
+-- ALTER queries
+ALTER TABLE communications ADD COLUMN encrypted BOOLEAN DEFAULT FALSE;
+ALTER TABLE communications ADD INDEX idx_channel_status (status);
+ALTER TABLE communications DROP COLUMN remarks;
+ALTER TABLE communications MODIFY COLUMN frequency VARCHAR(20);
+ALTER TABLE communications ADD COLUMN next_service DATE;
+-- DELETE queries
+DELETE FROM communications WHERE status = 'Inactive';
+DELETE c FROM communications AS c JOIN vehicles AS v ON c.assigned_unit = v.assigned_unit WHERE v.status = 'Decommissioned';
+DELETE FROM communications WHERE range_km < 10.0;
+DELETE FROM communications WHERE channel_id IN (SELECT item_id FROM logistics WHERE category='Communication');
+DELETE FROM communications WHERE name LIKE 'Echo%';
+
+-- UPDATE queries
+UPDATE communications SET status = 'Operational' WHERE status = 'Active';
+UPDATE communications SET frequency = CONCAT(frequency, ' MHz');
+UPDATE communications SET unit_assigned = CONCAT(unit_assigned, ' (Secured)') WHERE encrypted = TRUE;
+UPDATE communications c JOIN events e ON c.name = e.organized_by SET c.status = 'Used' WHERE e.status = 'Completed';
+UPDATE communications SET last_maintenance = CURDATE() WHERE next_service < CURDATE();
+
+-- Table: intelligence_reports
+
+-- SELECT queries
+SELECT status, COUNT(*) AS reports FROM intelligence_reports GROUP BY status;
+SELECT * FROM intelligence_reports WHERE priority = 'High';
+SELECT source, (priority = 'Critical') AS is_critical FROM intelligence_reports;
+SELECT * FROM intelligence_reports WHERE report_date BETWEEN '2025-06-01' AND '2025-06-30';
+SELECT * FROM intelligence_reports WHERE remarks LIKE '%intel%';
+
+-- RENAME queries
+ALTER TABLE intelligence_reports RENAME COLUMN source TO report_source;
+ALTER TABLE intelligence_reports RENAME COLUMN report_date TO date_reported;
+ALTER TABLE intelligence_reports RENAME COLUMN reviewed_by TO reviewer;
+ALTER TABLE intelligence_reports RENAME COLUMN priority TO urgency;
+ALTER TABLE intelligence_reports RENAME TO intel_reports;
+
+-- ALTER queries
+ALTER TABLE intel_reports ADD COLUMN classification VARCHAR(50) DEFAULT 'Confidential';
+ALTER TABLE intel_reports ADD INDEX idx_reports_status (status);
+ALTER TABLE intel_reports DROP COLUMN remarks;
+ALTER TABLE intel_reports MODIFY COLUMN content TEXT NOT NULL;
+ALTER TABLE intel_reports ADD COLUMN arrival_time TIME;
+
+-- DELETE queries
+DELETE FROM intel_reports WHERE status = 'Classified';
+DELETE ir FROM intel_reports AS ir JOIN events AS e ON ir.location = e.location WHERE e.type = 'Exercise';
+DELETE FROM intel_reports WHERE priority = 'Low';
+DELETE FROM intel_reports WHERE report_id IN (SELECT training_id FROM training_records WHERE certification_status='Expired');
+DELETE FROM intel_reports WHERE source LIKE 'Intercepted%';
+
+-- UPDATE queries
+UPDATE intel_reports SET status = 'Archived' WHERE status = 'Reviewed';
+UPDATE intel_reports SET content = CONCAT(content, ' [Reviewed]') WHERE status = 'Under Analysis';
+UPDATE intel_reports ir JOIN comm_channels c ON ir.report_id = c.channel_id SET ir.status = 'Verified' WHERE c.status = 'Active';
+UPDATE intel_reports SET report_date = CURDATE() WHERE report_id = (SELECT MAX(report_id) FROM intel_reports);
+UPDATE intel_reports SET priority = 'Medium' WHERE priority = 'High';
+
+-- Table: equipment
+
+-- SELECT queries
+SELECT type, SUM(quantity) AS total_qty FROM equipment GROUP BY type;
+SELECT * FROM equipment WHERE status = 'Under Maintenance';
+SELECT name, CASE WHEN assigned_unit = 'All Units' THEN 'Global' ELSE assigned_unit END AS unit_scope FROM equipment;
+SELECT * FROM equipment WHERE location LIKE '%Depot%';
+SELECT * FROM equipment WHERE assigned_unit = 'Marksmanship Unit';
+
+-- RENAME queries
+ALTER TABLE equipment RENAME COLUMN name TO equipment_name;
+ALTER TABLE equipment RENAME COLUMN assigned_unit TO unit_assigned;
+ALTER TABLE equipment RENAME COLUMN condition TO equip_condition;
+ALTER TABLE equipment RENAME COLUMN status TO equip_status;
+ALTER TABLE equipment RENAME TO army_equipment;
+
+-- ALTER queries
+ALTER TABLE army_equipment ADD COLUMN warranty_end DATE;
+ALTER TABLE army_equipment ADD INDEX idx_equipment_location (location);
+ALTER TABLE army_equipment DROP COLUMN remarks;
+ALTER TABLE army_equipment MODIFY COLUMN quantity SMALLINT;
+ALTER TABLE army_equipment ADD COLUMN purchase_date DATE;
+
+-- DELETE queries
+DELETE FROM army_equipment WHERE equip_condition = 'Fair';
+DELETE e FROM army_equipment AS e JOIN logistics AS l ON e.equipment_id = l.logistic_id WHERE l.status = 'Pending';
+DELETE FROM army_equipment WHERE equipment_id IN (SELECT item_id FROM logistics WHERE category='Weapon');
+DELETE FROM army_equipment WHERE assigned_unit = 'Obsolete Unit';
+DELETE FROM army_equipment WHERE name LIKE '%Kit%';
+
+-- UPDATE queries
+UPDATE army_equipment SET equip_status = 'In Service' WHERE equip_condition = 'Good';
+UPDATE army_equipment SET location = CONCAT(location, ' - Main Depot') WHERE location = 'Delhi Depot';
+UPDATE army_equipment SET quantity = quantity + 10 WHERE equipment_name LIKE '%Backpack%';
+UPDATE army_equipment e JOIN support_staff s ON e.unit_assigned = s.department SET e.unit_assigned = 'HQ Command' WHERE s.role = 'Clerk';
+UPDATE army_equipment SET purchase_date = CURDATE() WHERE warranty_end < CURDATE();
+
+-- Table: logistics
+-- SELECT queries
+SELECT category, COUNT(*) AS count_items FROM logistics GROUP BY category;
+SELECT * FROM logistics WHERE status = 'Delivered';
+SELECT item_name, (quantity * IF(category='Ammunition',2,1)) AS weight_estimate FROM logistics;
+SELECT * FROM logistics WHERE source LIKE '%Depot%';
+SELECT * FROM logistics WHERE logistic_id BETWEEN 10 AND 20;
+
+-- RENAME queries
+ALTER TABLE logistics RENAME COLUMN item_name TO logistic_item;
+ALTER TABLE logistics RENAME COLUMN date_dispatched TO dispatch_date;
+ALTER TABLE logistics RENAME COLUMN received_by TO receiver;
+ALTER TABLE logistics RENAME COLUMN status TO delivery_status;
+ALTER TABLE logistics RENAME TO supply_chain;
+
+-- ALTER queries
+ALTER TABLE supply_chain ADD COLUMN delivery_date DATE;
+ALTER TABLE supply_chain ADD INDEX idx_logistics_status (delivery_status);
+ALTER TABLE supply_chain DROP COLUMN remarks;
+ALTER TABLE supply_chain MODIFY COLUMN quantity SMALLINT;
+ALTER TABLE supply_chain ADD COLUMN priority VARCHAR(20) DEFAULT 'Normal';
+
+-- DELETE queries
+DELETE FROM supply_chain WHERE delivery_status = 'Canceled';
+DELETE sc FROM supply_chain AS sc JOIN vehicles AS v ON sc.logistic_id = v.vehicle_id WHERE v.status = 'Inactive';
+DELETE FROM supply_chain WHERE category = 'Fuel' AND status = 'Delivered';
+DELETE FROM supply_chain WHERE quantity < 50;
+DELETE FROM supply_chain WHERE item_name LIKE 'Prohibited%';
+
+-- UPDATE queries
+UPDATE supply_chain SET delivery_status = 'Completed' WHERE status = 'Delivered';
+UPDATE supply_chain SET destination = CONCAT(destination, ' (Verified)') WHERE status = 'Delivered';
+UPDATE supply_chain sc JOIN promotions p ON sc.received_by = p.approved_by SET sc.delivery_status = 'Delayed' WHERE p.status = 'Approved';
+UPDATE supply_chain SET category = 'General Supply' WHERE category = 'Field Supply';
+UPDATE supply_chain SET status = 'In Transit' WHERE logistic_id > 15;
+
+-- Table: support_staff
+
+-- SELECT queries
+SELECT department, COUNT(*) AS num_staff FROM support_staff GROUP BY department;
+SELECT * FROM support_staff WHERE status = 'On Leave';
+SELECT name, CASE WHEN age > 40 THEN 'Senior Staff' ELSE 'Junior Staff' END AS staff_level FROM support_staff;
+SELECT * FROM support_staff WHERE join_date BETWEEN '2010-01-01' AND '2015-12-31';
+SELECT * FROM support_staff WHERE role LIKE '%Technician%';
+
+-- RENAME queries
+ALTER TABLE support_staff RENAME COLUMN name TO staff_name;
+ALTER TABLE support_staff RENAME COLUMN contact_number TO contact;
+ALTER TABLE support_staff RENAME COLUMN join_date TO hire_date;
+ALTER TABLE support_staff RENAME COLUMN status TO employment_status;
+ALTER TABLE support_staff RENAME TO personnel;
+
+-- ALTER queries
+ALTER TABLE personnel ADD COLUMN salary DECIMAL(8,2) DEFAULT 25000;
+ALTER TABLE personnel ADD INDEX idx_personnel_dept (department);
+ALTER TABLE personnel DROP COLUMN email;
+ALTER TABLE personnel MODIFY COLUMN gender CHAR(1) NOT NULL;
+ALTER TABLE personnel ADD COLUMN exit_date DATE;
+
+-- DELETE queries
+DELETE FROM personnel WHERE employment_status = 'Retired';
+DELETE p FROM personnel AS p JOIN disciplinary_actions AS d ON p.staff_id = d.soldier_id WHERE d.status = 'Closed';
+DELETE FROM personnel WHERE department = 'Catering' AND status = 'Inactive';
+DELETE FROM personnel WHERE age > 60;
+DELETE FROM personnel WHERE staff_id IN (SELECT staff_id FROM support_staff WHERE role LIKE '%Cleaner%');
+
+-- UPDATE queries
+UPDATE personnel SET employment_status = 'Retired' WHERE age > 58;
+UPDATE personnel SET role = CONCAT(role, ' II') WHERE department = 'IT';
+UPDATE personnel SET contact = CONCAT('+91-', contact) WHERE contact IS NOT NULL;
+UPDATE personnel p JOIN soldiers s ON p.staff_id = s.soldier_id SET p.department = 'Logistics' WHERE s.unit LIKE '%Logistics%';
+UPDATE personnel SET salary = salary * 1.10 WHERE department = 'Engineering';
+
+-- Table: medical_records (numeric)
+
+-- SELECT queries
+SELECT blood_pressure, AVG(weight_kg) AS avg_weight FROM medical_records GROUP BY blood_pressure;
+SELECT * FROM medical_records WHERE medical_condition = 'None';
+SELECT * FROM medical_records WHERE last_checkup BETWEEN '2024-01-01' AND '2024-12-31';
+SELECT eyesight, COUNT(*) AS count_vision FROM medical_records GROUP BY eyesight;
+SELECT * FROM medical_records WHERE doctor_name LIKE 'Dr. A.%';
+
+-- RENAME queries
+ALTER TABLE medical_records RENAME COLUMN height_cm TO height_cm_val;
+ALTER TABLE medical_records RENAME COLUMN weight_kg TO weight_kg_val;
+ALTER TABLE medical_records RENAME COLUMN blood_pressure TO bp;
+ALTER TABLE medical_records RENAME COLUMN doctor_name TO physician;
+ALTER TABLE medical_records RENAME TO medical_records_metrics;
+
+-- ALTER queries
+ALTER TABLE medical_records_metrics ADD COLUMN bmi DECIMAL(5,2);
+ALTER TABLE medical_records_metrics ADD INDEX idx_medical_condition (medical_condition);
+ALTER TABLE medical_records_metrics DROP COLUMN blood_group;
+ALTER TABLE medical_records_metrics MODIFY COLUMN eyesight VARCHAR(10);
+ALTER TABLE medical_records_metrics ADD COLUMN next_checkup DATE;
+
+-- DELETE queries
+DELETE FROM medical_records_metrics WHERE medical_condition = 'None';
+DELETE mr FROM medical_records_metrics AS mr JOIN promotions AS p ON mr.soldier_id = p.soldier_id WHERE p.new_rank = 'Naib Subedar';
+DELETE FROM medical_records_metrics WHERE height_cm_val > 180;
+DELETE FROM medical_records_metrics WHERE bp = '135/90';
+DELETE FROM medical_records_metrics WHERE record_id IN (SELECT training_id FROM training_records WHERE certification_status = 'Revoked');
+
+-- UPDATE queries
+UPDATE medical_records_metrics SET bmi = (weight_kg_val/(height_cm_val/100)*(height_cm_val/100));
+UPDATE medical_records_metrics SET bp = '120/80' WHERE blood_pressure = '130/85';
+UPDATE medical_records_metrics mr JOIN officers o ON mr.doctor_name = o.email_address SET mr.doctor_name = o.full_name WHERE o.branch = 'Medical';
+UPDATE medical_records_metrics SET medical_condition = 'Healthy' WHERE eyesight LIKE '6/6';
+UPDATE medical_records_metrics SET last_checkup = DATE_SUB(last_checkup, INTERVAL 1 YEAR) WHERE last_checkup > '2024-06-01';
+
+-- Table: equipment_inventory
+
+-- SELECT queries
+SELECT category, SUM(quantity) AS total_qty FROM equipment_inventory GROUP BY category;
+SELECT * FROM equipment_inventory WHERE condition_status = 'Needs Repair';
+SELECT name, CASE WHEN quantity < 20 THEN 'Low Stock' ELSE 'Sufficient' END AS stock_status FROM equipment_inventory;
+SELECT * FROM equipment_inventory WHERE issue_date BETWEEN '2023-01-01' AND '2024-12-31';
+SELECT * FROM equipment_inventory WHERE supplier_name LIKE '%DRDO%';
+
+-- RENAME queries
+ALTER TABLE equipment_inventory RENAME COLUMN name TO equipment_name;
+ALTER TABLE equipment_inventory RENAME COLUMN condition_status TO status;
+ALTER TABLE equipment_inventory RENAME COLUMN supplier_name TO vendor;
+ALTER TABLE equipment_inventory RENAME COLUMN issue_date TO issued_on;
+ALTER TABLE equipment_inventory RENAME TO equipment_stock;
+
+-- ALTER queries
+ALTER TABLE equipment_stock ADD COLUMN warranty_end DATE;
+ALTER TABLE equipment_stock ADD INDEX idx_stock_location (location);
+ALTER TABLE equipment_stock DROP COLUMN remarks;
+ALTER TABLE equipment_stock MODIFY COLUMN quantity SMALLINT;
+ALTER TABLE equipment_stock ADD COLUMN purchase_date DATE;
+
+-- DELETE queries
+DELETE FROM equipment_stock WHERE status = 'Needs Repair';
+DELETE es FROM equipment_stock AS es JOIN logistics AS l ON es.equipment_id = l.logistic_id WHERE l.status = 'Delivered';
+DELETE FROM equipment_stock WHERE issue_date < '2022-01-01';
+DELETE FROM equipment_stock WHERE category = 'Weapon' AND quantity < 10;
+DELETE FROM equipment_stock WHERE name LIKE '%Damaged%';
+
+-- UPDATE queries
+UPDATE equipment_stock SET status = 'In Use' WHERE status = 'Good';
+UPDATE equipment_stock SET location = CONCAT(location, ' (Warehouse)') WHERE location = 'Delhi Depot';
+UPDATE equipment_stock SET quantity = quantity - 5 WHERE category = 'Protective Gear';
+UPDATE equipment_stock es JOIN missions m ON es.equipment_id = m.mission_id SET es.status = 'Deployed' WHERE m.status = 'Ongoing';
+UPDATE equipment_stock SET last_maintenance = CURDATE() WHERE purchase_date < '2024-01-01';
+
+-- Table: training_records
+
+-- SELECT queries
+SELECT result, COUNT(*) AS passed_count FROM training_records GROUP BY result;
+SELECT * FROM training_records WHERE certification_status = 'Certified';
+SELECT soldier_id, duration_days FROM training_records WHERE instructor LIKE 'Capt.%';
+SELECT * FROM training_records WHERE start_date BETWEEN '2023-01-01' AND '2023-12-31';
+SELECT * FROM training_records WHERE course_name LIKE '%Combat%';
+
+-- RENAME queries
+ALTER TABLE training_records RENAME COLUMN course_name TO course_title;
+ALTER TABLE training_records RENAME COLUMN training_center TO center_name;
+ALTER TABLE training_records RENAME COLUMN certification_status TO cert_status;
+ALTER TABLE training_records RENAME COLUMN instructor TO trainer;
+ALTER TABLE training_records RENAME TO trainings;
+
+-- ALTER queries
+ALTER TABLE trainings ADD COLUMN score INT DEFAULT 0;
+ALTER TABLE trainings ADD INDEX idx_training_result (result);
+ALTER TABLE trainings DROP COLUMN certification_status;
+ALTER TABLE trainings MODIFY COLUMN duration_days SMALLINT;
+ALTER TABLE trainings ADD COLUMN comments TEXT;
+
+-- DELETE queries
+DELETE FROM trainings WHERE result = 'Failed';
+DELETE tr FROM trainings AS tr JOIN soldiers AS s ON tr.soldier_id = s.soldier_id WHERE s.unit LIKE '%Engineers%';
+DELETE FROM trainings WHERE start_date < '2023-06-01';
+DELETE FROM trainings WHERE instructor = 'Lt. Gen. A. Menon';
+DELETE FROM trainings WHERE training_id IN (SELECT mission_id FROM missions WHERE status = 'Canceled');
+
+-- UPDATE queries
+UPDATE trainings SET result = 'Completed' WHERE result = 'Passed';
+UPDATE trainings SET certification_status = 'Revoked' WHERE cert_status IS NULL;
+UPDATE trainings SET end_date = DATE_ADD(start_date, INTERVAL duration_days DAY);
+UPDATE trainings SET instructor = CONCAT('Col. ', trainer) WHERE trainer LIKE 'Capt.%';
+UPDATE trainings SET course_name = CONCAT(course_name, ' - Updated') WHERE certification_status = 'Certified';
