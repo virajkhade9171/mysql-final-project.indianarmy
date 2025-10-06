@@ -1,1 +1,625 @@
+-- First, create the database for the Indian Army management system
+CREATE DATABASE IF NOT EXISTS indianarmy;
+
+-- Switch to the newly created database to execute the following scripts
+USE indianarmy;
+
+-- 1. Create the 'officers' table to store officer details
+CREATE TABLE officers (
+    officerid INT PRIMARY KEY,
+    name VARCHAR(100),
+    rank VARCHAR(50),
+    age INT,
+    gender CHAR(1),
+    commissiondate DATE,
+    postinglocation VARCHAR(100),
+    branch VARCHAR(50),
+    contactnumber VARCHAR(15),
+    email VARCHAR(100)
+);
+
+-- 2. Create the 'soldiers' table to store soldier information
+CREATE TABLE soldiers (
+    soldierid INT PRIMARY KEY,
+    name VARCHAR(100),
+    rank VARCHAR(50),
+    age INT,
+    gender CHAR(1),
+    joindate DATE,
+    unit VARCHAR(100),
+    postinglocation VARCHAR(100),
+    contactnumber VARCHAR(15),
+    email VARCHAR(100)
+);
+
+-- 3. Create the 'battalions' table for unit details
+CREATE TABLE battalions (
+    battalionid INT PRIMARY KEY,
+    name VARCHAR(100),
+    location VARCHAR(100),
+    commander VARCHAR(100),
+    soldierscount INT,
+    vehiclescount INT,
+    creationdate DATE,
+    region VARCHAR(100),
+    status VARCHAR(50),
+    remarks TEXT
+);
+
+-- 4. Create the 'weapons' table to catalog military hardware
+CREATE TABLE weapons (
+    weaponid INT PRIMARY KEY,
+    name VARCHAR(100),
+    type VARCHAR(50),
+    model VARCHAR(50),
+    manufacturer VARCHAR(100),
+    rangekm DECIMAL(6,2),
+    quantity INT,
+    assignedunit VARCHAR(100),
+    status VARCHAR(50),
+    remarks TEXT
+);
+
+-- 5. Create a temporary table for a report, which will be dropped later
+CREATE TABLE temp_report (
+    reportid INT PRIMARY KEY AUTO_INCREMENT,
+    report_name VARCHAR(255),
+    generated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- 6. Alter the 'officers' table to add a 'specialization' column
+ALTER TABLE officers ADD COLUMN specialization VARCHAR(100);
+
+-- 7. Modify the 'battalions' table to increase the length of the 'commander' column
+ALTER TABLE battalions MODIFY COLUMN commander VARCHAR(150);
+
+-- 8. Add a UNIQUE constraint to the 'officers' email to prevent duplicates
+ALTER TABLE officers ADD CONSTRAINT uq_officer_email UNIQUE (email);
+
+-- 9. Add a FOREIGN KEY to link 'leaverecords' to 'soldiers'
+-- Note: 'leaverecords' table must be created first.
+CREATE TABLE leaverecords (leaveid INT PRIMARY KEY, soldierid INT); -- Simplified for this example
+ALTER TABLE leaverecords ADD CONSTRAINT fk_soldier_leave FOREIGN KEY (soldierid) REFERENCES soldiers(soldierid);
+
+-- 10. Drop the temporary table as it is no longer needed
+DROP TABLE IF EXISTS temp_report;
+-- 1. Insert a new officer record into the 'officers' table
+INSERT INTO officers (officerid, name, rank, age, gender, commissiondate, postinglocation, branch, contactnumber, email)
+VALUES (21, 'Arjun Rathore', 'Major', 36, 'M', '2012-06-11', 'Jaipur Base', 'Infantry', '9876500001', 'arjun.rathore@army.in');
+
+-- 2. Insert multiple records into the 'soldiers' table at once
+INSERT INTO soldiers (soldierid, name, rank, age, gender, joindate, unit, postinglocation, contactnumber, email) VALUES
+(21, 'Rohan Sharma', 'Sepoy', 24, 'M', '2022-02-10', '1st Battalion', 'Jammu', '9123456789', 'rohan.sharma@army.in'),
+(22, 'Priya Singh', 'Naik', 29, 'F', '2018-07-20', '3rd Battalion', 'Leh', '9123456788', 'priya.singh@army.in');
+
+-- 3. Insert a new record for a weapon
+INSERT INTO weapons (weaponid, name, type, model, manufacturer, quantity, status)
+VALUES (21, 'Glock-17', 'Pistol', 'Gen 5', 'Glock', 150, 'Active');
+
+-- 4. Update the posting location for an officer
+UPDATE officers SET postinglocation = 'Udhampur HQ' WHERE officerid = 5;
+
+-- 5. Update the rank and contact number for a soldier
+UPDATE soldiers SET rank = 'Havildar', contactnumber = '9999988888' WHERE soldierid = 1;
+
+-- 6. Increase the quantity of all 'Active' INSAS rifles by 50
+UPDATE weapons SET quantity = quantity + 50 WHERE name = 'INSAS Rifle' AND status = 'Active';
+
+-- 7. Update the status of all 'Combat' missions that ended before 2023 to 'Archived'
+CREATE TABLE missions (missionid INT, type VARCHAR(50), enddate DATE, status VARCHAR(50)); -- Simplified for example
+UPDATE missions SET status = 'Archived' WHERE type = 'Combat' AND enddate < '2023-01-01';
+
+-- 8. Delete a specific officer from the records
+DELETE FROM officers WHERE officerid = 21;
+
+-- 9. Delete all soldiers who are older than 55
+DELETE FROM soldiers WHERE age > 55;
+
+-- 10. Delete all weapons that are in the 'Decommissioned' status
+DELETE FROM weapons WHERE status = 'Decommissioned';
+-- 1. Select all officers with the rank of 'Colonel'
+SELECT name, branch, postinglocation FROM officers WHERE rank = 'Colonel';
+
+-- 2. Select all soldiers from the '2nd Battalion' and order them by rank
+SELECT name, rank, joindate FROM soldiers WHERE unit = '2nd Battalion' ORDER BY rank;
+
+-- 3. Count the number of officers in each branch
+SELECT branch, COUNT(officerid) AS NumberOfOfficers FROM officers GROUP BY branch;
+
+-- 4. Find the total number of soldiers in each posting location
+SELECT postinglocation, COUNT(soldierid) AS SoldierCount FROM soldiers GROUP BY postinglocation;
+
+-- 5. Select all 'Active' weapons with a quantity of more than 100
+SELECT name, type, quantity FROM weapons WHERE status = 'Active' AND quantity > 100;
+
+-- 6. List all missions of type 'Training', ordered by start date (most recent first)
+CREATE TABLE missions (name VARCHAR(100), type VARCHAR(50), startdate DATE); -- Simplified
+SELECT name, type, startdate FROM missions WHERE type = 'Training' ORDER BY startdate DESC;
+
+-- 7. Group battalions by region and find the average number of soldiers
+SELECT region, AVG(soldierscount) AS AvgSoldierCount FROM battalions GROUP BY region;
+
+-- 8. Display the top 5 oldest officers
+SELECT name, rank, age FROM officers ORDER BY age DESC LIMIT 5;
+
+-- 9. Select all distinct ranks from the 'soldiers' table
+SELECT DISTINCT rank FROM soldiers;
+
+-- 10. Find all female officers commissioned after 2015
+SELECT name, rank, commissiondate FROM officers WHERE gender = 'F' AND commissiondate > '2015-12-31';
+
+-- 1. WHERE: Find all officers posted in 'Delhi HQ'
+SELECT name, rank, branch FROM officers WHERE postinglocation = 'Delhi HQ';
+
+-- 2. BETWEEN: Find soldiers with an age between 25 and 30
+SELECT name, rank, age FROM soldiers WHERE age BETWEEN 25 AND 30;
+
+-- 3. LIKE: Find all officers whose name starts with 'A'
+SELECT name, rank FROM officers WHERE name LIKE 'A%';
+
+-- 4. IN: Find battalions in the 'Northern Command' or 'Western Command'
+SELECT name, region FROM battalions WHERE region IN ('Northern Command', 'Western Command');
+
+-- 5. AND: Find all 'Active' rifles
+SELECT name, model, manufacturer FROM weapons WHERE type = 'Rifle' AND status = 'Active';
+
+-- 6. OR: Find officers who are either a 'Colonel' or a 'Major'
+SELECT name, rank FROM officers WHERE rank = 'Colonel' OR rank = 'Major';
+
+-- 7. NOT: Find all weapons that are NOT 'In Service'
+CREATE TABLE armsinventory (itemname VARCHAR(100), status VARCHAR(50)); -- Simplified
+SELECT itemname, status FROM armsinventory WHERE NOT status = 'In Service';
+
+-- 8. ANY: Find officers whose age is greater than any officer in the 'Medical' branch
+SELECT name, age, branch FROM officers
+WHERE age > ANY (SELECT age FROM officers WHERE branch = 'Medical');
+
+-- 9. ALL: Find weapons with a quantity greater than all 'Reserve' weapons
+SELECT name, quantity FROM weapons
+WHERE quantity > ALL (SELECT quantity FROM weapons WHERE status = 'Reserve');
+
+-- 10. Complex AND/OR/NOT: Find active 'Infantry' or 'Artillery' officers not posted in 'Kashmir'
+SELECT name, branch, postinglocation FROM officers
+WHERE (branch = 'Infantry' OR branch = 'Artillery') AND status = 'Active' AND NOT postinglocation LIKE '%Kashmir%';
+
+-- Drop tables to redefine them with constraints
+DROP TABLE IF EXISTS leaverecords;
+DROP TABLE IF EXISTS soldiers;
+
+-- 1 & 2. PRIMARY KEY: Define a primary key when creating a table
+CREATE TABLE soldiers (
+    soldierid INT,
+    name VARCHAR(100),
+    -- other columns
+    PRIMARY KEY (soldierid)
+);
+
+-- 3, 4, 5. FOREIGN KEY with ON DELETE CASCADE: If a soldier is deleted, their leave records are also deleted
+CREATE TABLE leaverecords (
+    leaveid INT PRIMARY KEY,
+    soldierid INT,
+    startdate DATE,
+    enddate DATE,
+    -- other columns
+    CONSTRAINT fk_soldier
+        FOREIGN KEY (soldierid)
+        REFERENCES soldiers(soldierid)
+        ON DELETE CASCADE
+);
+
+-- 6. ON UPDATE CASCADE: If a soldier's ID is updated, it cascades to the 'leaverecords' table
+ALTER TABLE leaverecords
+ADD CONSTRAINT fk_soldier_update
+FOREIGN KEY (soldierid) REFERENCES soldiers(soldierid) ON UPDATE CASCADE;
+
+-- 7. CHECK Constraint: Ensure the age of an officer is over 21
+ALTER TABLE officers ADD CONSTRAINT chk_officer_age CHECK (age > 21);
+
+-- 8. DEFAULT Constraint: Set a default rank for new soldiers
+ALTER TABLE soldiers MODIFY rank VARCHAR(50) DEFAULT 'Sepoy';
+
+-- 9. Demonstrate ON DELETE CASCADE
+-- First, insert a parent record (soldier) and a child record (leave)
+INSERT INTO soldiers (soldierid, name) VALUES (999, 'Test Soldier');
+INSERT INTO leaverecords (leaveid, soldierid) VALUES (999, 999);
+-- Now, deleting the soldier will also delete their leave record
+DELETE FROM soldiers WHERE soldierid = 999;
+-- `SELECT * FROM leaverecords WHERE soldierid = 999;` will now be empty.
+
+-- 10. Drop a constraint
+ALTER TABLE officers DROP CONSTRAINT chk_officer_age;
+
+-- Drop tables to redefine them with constraints
+DROP TABLE IF EXISTS leaverecords;
+DROP TABLE IF EXISTS soldiers;
+
+-- 1 & 2. PRIMARY KEY: Define a primary key when creating a table
+CREATE TABLE soldiers (
+    soldierid INT,
+    name VARCHAR(100),
+    -- other columns
+    PRIMARY KEY (soldierid)
+);
+
+-- 3, 4, 5. FOREIGN KEY with ON DELETE CASCADE: If a soldier is deleted, their leave records are also deleted
+CREATE TABLE leaverecords (
+    leaveid INT PRIMARY KEY,
+    soldierid INT,
+    startdate DATE,
+    enddate DATE,
+    -- other columns
+    CONSTRAINT fk_soldier
+        FOREIGN KEY (soldierid)
+        REFERENCES soldiers(soldierid)
+        ON DELETE CASCADE
+);
+
+-- 6. ON UPDATE CASCADE: If a soldier's ID is updated, it cascades to the 'leaverecords' table
+ALTER TABLE leaverecords
+ADD CONSTRAINT fk_soldier_update
+FOREIGN KEY (soldierid) REFERENCES soldiers(soldierid) ON UPDATE CASCADE;
+
+-- 7. CHECK Constraint: Ensure the age of an officer is over 21
+ALTER TABLE officers ADD CONSTRAINT chk_officer_age CHECK (age > 21);
+
+-- 8. DEFAULT Constraint: Set a default rank for new soldiers
+ALTER TABLE soldiers MODIFY rank VARCHAR(50) DEFAULT 'Sepoy';
+
+-- 9. Demonstrate ON DELETE CASCADE
+-- First, insert a parent record (soldier) and a child record (leave)
+INSERT INTO soldiers (soldierid, name) VALUES (999, 'Test Soldier');
+INSERT INTO leaverecords (leaveid, soldierid) VALUES (999, 999);
+-- Now, deleting the soldier will also delete their leave record
+DELETE FROM soldiers WHERE soldierid = 999;
+-- `SELECT * FROM leaverecords WHERE soldierid = 999;` will now be empty.
+
+-- 10. Drop a constraint
+ALTER TABLE officers DROP CONSTRAINT chk_officer_age;
+
+-- 1. INNER JOIN: Match battalions with their commanders from the 'officers' table
+SELECT b.name AS BattalionName, o.name AS CommanderName
+FROM battalions b
+INNER JOIN officers o ON b.commander = o.name;
+
+-- 2. LEFT JOIN: List all soldiers and any leave records they have
+SELECT s.name, lr.startdate, lr.enddate, lr.reason
+FROM soldiers s
+LEFT JOIN leaverecords lr ON s.soldierid = lr.soldierid;
+
+-- 3. RIGHT JOIN: List all leave records and the corresponding soldier
+SELECT s.name, lr.startdate, lr.reason
+FROM soldiers s
+RIGHT JOIN leaverecords lr ON s.soldierid = lr.soldierid;
+
+-- 4. FULL OUTER JOIN (Simulated for MySQL): Show all soldiers and all medical records
+CREATE TABLE medicalrecords(recordid INT, soldierid INT); -- Simplified
+SELECT s.name, mr.recordid FROM soldiers s LEFT JOIN medicalrecords mr ON s.soldierid = mr.soldierid
+UNION
+SELECT s.name, mr.recordid FROM soldiers s RIGHT JOIN medicalrecords mr ON s.soldierid = mr.soldierid;
+
+-- 5. SELF JOIN: Find pairs of officers posted at the same location
+SELECT A.name AS Officer1, B.name AS Officer2, A.postinglocation
+FROM officers A, officers B
+WHERE A.officerid < B.officerid AND A.postinglocation = B.postinglocation;
+
+-- 6. Multiple INNER JOINs: Get promotion details for soldiers, including their unit
+CREATE TABLE promotions (soldierid INT, newrank VARCHAR(50)); -- Simplified
+SELECT s.name, s.unit, p.newrank
+FROM promotions p
+JOIN soldiers s ON p.soldierid = s.soldierid;
+
+-- 7. LEFT JOIN with WHERE: Find soldiers who have never taken leave
+SELECT s.name FROM soldiers s
+LEFT JOIN leaverecords lr ON s.soldierid = lr.soldierid
+WHERE lr.leaveid IS NULL;
+
+-- 8. INNER JOIN with GROUP BY: Count the number of 'Active' weapons per battalion
+SELECT b.name, COUNT(w.weaponid) AS WeaponCount
+FROM battalions b
+JOIN weapons w ON b.name = w.assignedunit
+WHERE w.status = 'Active'
+GROUP BY b.name;
+
+-- 9. Multiple Joins: Link soldiers, their promotions, and their medical records
+SELECT s.name, p.newrank, mr.lastcheckup
+FROM soldiers s
+JOIN promotions p ON s.soldierid = p.soldierid
+JOIN medicalrecords mr ON s.soldierid = mr.soldierid;
+
+-- 10. CROSS JOIN: Create all possible pairings of officers and missions (limited for brevity)
+SELECT o.name, m.name
+FROM officers o
+CROSS JOIN missions m
+LIMIT 100;
+
+-- 1. Single-row subquery: Find the youngest officer
+SELECT name, rank, age FROM officers WHERE age = (SELECT MIN(age) FROM officers);
+
+-- 2. Multi-row subquery with IN: Find officers posted in the same locations as 'Infantry' officers
+SELECT name, rank, postinglocation FROM officers
+WHERE postinglocation IN (SELECT postinglocation FROM officers WHERE branch = 'Infantry');
+
+-- 3. Correlated Subquery: Find soldiers older than the average age of their rank
+SELECT name, rank, age FROM soldiers s1
+WHERE age > (SELECT AVG(age) FROM soldiers s2 WHERE s2.rank = s1.rank);
+
+-- 4. Subquery in FROM clause: Calculate the average number of soldiers per region
+SELECT region, AVG(BattalionSize) FROM
+(SELECT region, soldierscount as BattalionSize FROM battalions) AS RegionalData
+GROUP BY region;
+
+-- 5. EXISTS: Find training centers that are located in 'Maharashtra'
+CREATE TABLE trainingcenters (name VARCHAR(100), location VARCHAR(100)); -- Simplified
+SELECT name FROM trainingcenters tc
+WHERE EXISTS (SELECT 1 FROM battalions b WHERE b.location = tc.location AND b.location = 'Maharashtra');
+
+-- 6. Subquery in SELECT clause: Show each officer's name and the count of soldiers in their posting location
+SELECT o.name,
+    (SELECT COUNT(*) FROM soldiers s WHERE s.postinglocation = o.postinglocation) AS SoldiersInLocation
+FROM officers o;
+
+-- 7. NOT EXISTS: Find battalions that have no 'Inactive' vehicles
+CREATE TABLE vehicles (assignedunit VARCHAR(100), status VARCHAR(50)); -- Simplified
+SELECT name FROM battalions b
+WHERE NOT EXISTS (SELECT 1 FROM vehicles v WHERE v.assignedunit = b.name AND v.status = 'Inactive');
+
+-- 8. Subquery for UPDATE: Promote all soldiers in the '2nd Battalion' to 'Naik'
+UPDATE soldiers SET rank = 'Naik'
+WHERE soldierid IN (SELECT soldierid FROM soldiers WHERE unit = '2nd Battalion');
+
+-- 9. ANY: Find missions commanded by any officer from the 'Infantry' branch
+SELECT name, commander FROM missions
+WHERE commander = ANY (SELECT name FROM officers WHERE branch = 'Infantry');
+
+-- 10. ALL: Find the battalion with more soldiers than any battalion in the 'Central Command'
+SELECT name, soldierscount FROM battalions
+WHERE soldierscount > ALL (SELECT soldierscount FROM battalions WHERE region = 'Central Command');
+
+-- AGGREGATE FUNCTIONS
+-- 1. SUM: Calculate the total number of soldiers across all battalions
+SELECT SUM(soldierscount) AS TotalForceStrength FROM battalions;
+
+-- 2. AVG: Find the average age of all officers
+SELECT AVG(age) AS AverageOfficerAge FROM officers;
+
+-- 3. COUNT: Count the number of missions that are currently 'Ongoing'
+SELECT COUNT(missionid) AS OngoingMissions FROM missions WHERE status = 'Ongoing';
+
+-- 4. MIN: Find the earliest commission date among all officers
+SELECT MIN(commissiondate) AS EarliestCommission FROM officers;
+
+-- 5. MAX: Find the highest number of vehicles in any single battalion
+SELECT MAX(vehiclescount) AS MaxVehiclesInBattalion FROM battalions;
+
+-- SCALAR FUNCTIONS
+-- 6. UPPER: Display all officer names in uppercase
+SELECT UPPER(name) AS OfficerName FROM officers;
+
+-- 7. LOWER: Display all officer emails in lowercase
+SELECT LOWER(email) AS OfficerEmail FROM officers;
+
+-- 8. LENGTH: Find the length of each weapon's name
+SELECT name, LENGTH(name) AS NameLength FROM weapons;
+
+-- 9. CONCAT: Combine officer's rank and name into a single string
+SELECT CONCAT(rank, ' ', name) AS FullTitle FROM officers;
+
+-- 10. NOW()/CURRENT_DATE: Get the current server date and time
+SELECT NOW() AS CurrentTimestamp, CURRENT_DATE() as Today;
+
+-- VIEWS
+-- 1. Create a view for high-ranking officers (Colonel and above)
+CREATE OR REPLACE VIEW HighRankingOfficers AS
+SELECT officerid, name, rank, branch, postinglocation
+FROM officers
+WHERE rank IN ('Colonel', 'Brigadier', 'Major General', 'Lt. Gen.');
+
+-- 2. Use the view to find all high-ranking officers in the 'Infantry' branch
+SELECT * FROM HighRankingOfficers WHERE branch = 'Infantry';
+
+-- 3. Create a view to show weapon assignments to battalions
+CREATE OR REPLACE VIEW BattalionArmaments AS
+SELECT b.name AS battalion, w.name AS weapon, w.type, w.quantity
+FROM battalions b
+JOIN weapons w ON b.name = w.assignedunit;
+
+-- 4. Query the view to see armaments for the '3rd Armoured Battalion'
+SELECT * FROM BattalionArmaments WHERE battalion = '3rd Armoured Battalion';
+
+-- 5. Drop a view if it's no longer needed
+DROP VIEW IF EXISTS HighRankingOfficers;
+
+-- CTEs
+-- 6. Use a CTE to find battalions with more than 700 soldiers
+WITH LargeBattalions AS (
+    SELECT name, region, soldierscount
+    FROM battalions
+    WHERE soldierscount > 700
+)
+SELECT name, region FROM LargeBattalions;
+
+-- 7. Use a CTE to rank officers by age within each branch
+WITH OfficerAgeRank AS (
+    SELECT name, branch, age, RANK() OVER(PARTITION BY branch ORDER BY age DESC) as age_rank
+    FROM officers
+)
+SELECT * FROM OfficerAgeRank WHERE age_rank <= 3;
+
+-- 8. Multiple CTEs: First find old weapons, then join with battalions
+WITH OldWeapons AS (
+    SELECT weaponid, name FROM weapons WHERE status = 'Reserve'
+),
+BattalionInfo AS (
+    SELECT name, region FROM battalions
+)
+SELECT bw.battalion, bw.weapon, bi.region
+FROM BattalionArmaments bw
+JOIN OldWeapons ow ON bw.weapon = ow.name
+JOIN BattalionInfo bi ON bw.battalion = bi.name;
+
+
+-- 9. Recursive CTE: Create a simple command hierarchy (requires adding a 'reports_to' column)
+ALTER TABLE officers ADD COLUMN reports_to INT;
+UPDATE officers SET reports_to = 8 WHERE officerid IN (1, 6, 9); -- Reporting to Major General
+WITH RECURSIVE CommandHierarchy AS (
+    -- Anchor member: the top-level officer
+    SELECT officerid, name, rank, 0 AS level
+    FROM officers
+    WHERE reports_to IS NULL
+    UNION ALL
+    -- Recursive member: officers who report to someone in the previous level
+    SELECT o.officerid, o.name, o.rank, ch.level + 1
+    FROM officers o
+    INNER JOIN CommandHierarchy ch ON o.reports_to = ch.officerid
+)
+SELECT * FROM CommandHierarchy;
+
+-- 10. CTE to find the total payroll for each unit
+CREATE TABLE payroll (soldierid INT, netpay DECIMAL(10,2)); -- Simplified
+WITH UnitPay AS (
+    SELECT s.unit, SUM(p.netpay) as TotalPay
+    FROM soldiers s
+    JOIN payroll p ON s.soldierid = p.soldierid
+    GROUP BY s.unit
+)
+SELECT unit, TotalPay FROM UnitPay ORDER BY TotalPay DESC;
+
+DELIMITER $$
+
+-- 1. CREATE: Procedure to add a new soldier
+CREATE PROCEDURE AddNewSoldier(
+    IN p_soldierid INT,
+    IN p_name VARCHAR(100),
+    IN p_rank VARCHAR(50),
+    IN p_unit VARCHAR(100)
+)
+BEGIN
+    INSERT INTO soldiers (soldierid, name, rank, unit, joindate, status)
+    VALUES (p_soldierid, p_name, p_rank, p_unit, CURDATE(), 'Active');
+END$$
+
+-- 2. READ: Procedure to get details of a specific officer
+CREATE PROCEDURE GetOfficerDetails(IN p_officerid INT)
+BEGIN
+    SELECT * FROM officers WHERE officerid = p_officerid;
+END$$
+
+-- 3. UPDATE: Procedure to update a soldier's posting location
+CREATE PROCEDURE UpdateSoldierLocation(
+    IN p_soldierid INT,
+    IN p_newlocation VARCHAR(100)
+)
+BEGIN
+    UPDATE soldiers SET postinglocation = p_newlocation WHERE soldierid = p_soldierid;
+END$$
+
+-- 4. DELETE: Procedure to delete a mission
+CREATE PROCEDURE DeleteMission(IN p_missionid INT)
+BEGIN
+    DELETE FROM missions WHERE missionid = p_missionid;
+END$$
+
+DELIMITER ;
+
+-- 5. Call a stored procedure to get details for officer with ID 2
+CALL GetOfficerDetails(2);
+
+-- 1. RANK(): Rank officers by age in descending order
+SELECT name, rank, age, RANK() OVER (ORDER BY age DESC) as AgeRank FROM officers;
+
+-- 2. ROW_NUMBER(): Assign a unique row number to soldiers within each unit, ordered by join date
+SELECT name, unit, joindate,
+    ROW_NUMBER() OVER (PARTITION BY unit ORDER BY joindate) as SeniorityInUnit
+FROM soldiers;
+
+-- 3. LEAD(): Show the next mission's start date
+SELECT name, startdate,
+    LEAD(startdate, 1) OVER (ORDER BY startdate) AS NextMissionStartDate
+FROM missions;
+
+-- 4. LAG(): Show the previous mission's start date
+SELECT name, startdate,
+    LAG(startdate, 1) OVER (ORDER BY startdate) AS PreviousMissionStartDate
+FROM missions;
+
+-- 5. DENSE_RANK(): Rank battalions by soldier count without gaps in ranking
+SELECT name, soldierscount,
+    DENSE_RANK() OVER (ORDER BY soldierscount DESC) as SizeRank
+FROM battalions;
+
+-- 1. COMMIT: A successful transaction to update a mission's status
+START TRANSACTION;
+UPDATE missions SET status = 'Completed', enddate = CURDATE() WHERE missionid = 8;
+COMMIT;
+-- The change is now permanent.
+
+-- 2. ROLLBACK: An unsuccessful transaction. The change will be undone.
+START TRANSACTION;
+UPDATE weapons SET assignedunit = 'Reserve' WHERE weaponid = 2;
+-- An error is found or a condition is not met, so we roll back.
+ROLLBACK;
+-- The weapon's assignedunit remains unchanged.
+
+-- 3, 4, 5. SAVEPOINT: A transaction with a partial rollback.
+START TRANSACTION;
+-- Action 1: Update one record
+UPDATE soldiers SET rank = 'Sergeant' WHERE soldierid = 1;
+SAVEPOINT after_promotion;
+-- Action 2: Update another record
+UPDATE soldiers SET rank = 'Corporal' WHERE soldierid = 2;
+-- Decide to undo the second action but keep the first
+ROLLBACK TO SAVEPOINT after_promotion;
+-- Commit the transaction to save the first change
+COMMIT;
+
+-- First, create an audit table to log actions
+CREATE TABLE audit_log (
+    log_id INT AUTO_INCREMENT PRIMARY KEY,
+    table_name VARCHAR(100),
+    record_id INT,
+    action_type VARCHAR(50),
+    action_timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    details TEXT
+);
+
+DELIMITER $$
+
+-- 1. AFTER INSERT Trigger: Log every new promotion
+CREATE TRIGGER AfterPromotionInsert
+AFTER INSERT ON promotions
+FOR EACH ROW
+BEGIN
+    INSERT INTO audit_log (table_name, record_id, action_type, details)
+    VALUES ('promotions', NEW.soldierid, 'INSERT', CONCAT('Soldier promoted to ', NEW.newrank));
+END$$
+
+-- 2. BEFORE UPDATE Trigger: Prevent changing an officer's commission date
+CREATE TRIGGER BeforeOfficerUpdate
+BEFORE UPDATE ON officers
+FOR EACH ROW
+BEGIN
+    IF OLD.commissiondate != NEW.commissiondate THEN
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Commission date is immutable and cannot be changed.';
+    END IF;
+END$$
+
+-- 3. AFTER DELETE Trigger: Log when a disciplinary action is deleted
+CREATE TABLE disciplinaryactions(actionid INT); -- Simplified
+CREATE TRIGGER AfterDisciplinaryActionDelete
+AFTER DELETE ON disciplinaryactions
+FOR EACH ROW
+BEGIN
+    INSERT INTO audit_log (table_name, record_id, action_type, details)
+    VALUES ('disciplinaryactions', OLD.actionid, 'DELETE', 'A disciplinary record was deleted.');
+END$$
+
+-- 4. Test the AFTER INSERT trigger by adding a promotion
+INSERT INTO promotions (promotionid, soldierid, newrank) VALUES (21, 5, 'Subedar');
+-- This will automatically add a record to the audit_log table.
+
+-- 5. Test the BEFORE UPDATE trigger by trying to change a commission date
+-- This query will fail and return the error message defined in the trigger.
+-- UPDATE officers SET commissiondate = '2005-01-01' WHERE officerid = 1;
+
+DELIMITER ;
 
