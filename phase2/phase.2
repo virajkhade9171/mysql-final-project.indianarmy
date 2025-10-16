@@ -1,1 +1,1548 @@
 
+-- ---------------------------------------------------
+-- TABLE 1: OFFICERS QUERIES
+-- ---------------------------------------------------
+
+-- SELECT QUERIES
+-- 1. Get all officers from Delhi HQ
+SELECT * FROM officers WHERE posting_location = 'Delhi HQ';
+
+-- 2. Find officers with rank Colonel
+SELECT name, rank, posting_location FROM officers WHERE rank = 'Colonel';
+
+-- 3. Count officers by gender
+SELECT gender, COUNT(*) as count FROM officers GROUP BY gender;
+
+-- 4. Get officers commissioned after 2010
+SELECT name, rank, commission_date FROM officers WHERE commission_date > '2010-01-01';
+
+-- 5. Find officers in Medical branch
+SELECT name, email, contact_number FROM officers WHERE branch = 'Medical';
+
+-- ALTER QUERIES
+-- 1. Add salary column
+ALTER TABLE officers ADD COLUMN salary DECIMAL(10,2);
+
+-- 2. Modify email column length
+ALTER TABLE officers MODIFY COLUMN email VARCHAR(150);
+
+-- 3. Add index on rank column
+ALTER TABLE officers ADD INDEX idx_rank (rank);
+
+-- 4. Add date of birth column
+ALTER TABLE officers ADD COLUMN date_of_birth DATE;
+
+-- 5. Drop contact_number column
+ALTER TABLE officers DROP COLUMN contact_number;
+
+-- RENAME QUERIES
+-- 1. Rename officers table
+RENAME TABLE officers TO army_officers;
+
+-- 2. Rename rank column
+ALTER TABLE officers CHANGE rank officer_rank VARCHAR(50);
+
+-- 3. Rename posting_location column
+ALTER TABLE officers CHANGE posting_location current_posting VARCHAR(100);
+
+-- 4. Rename commission_date column
+ALTER TABLE officers CHANGE commission_date service_start_date DATE;
+
+-- 5. Rename branch column
+ALTER TABLE officers CHANGE branch specialization VARCHAR(50);
+
+-- UPDATE QUERIES
+-- 1. Update salary for Colonels
+UPDATE officers SET salary = 120000 WHERE rank = 'Colonel';
+
+-- 2. Update posting location for officer ID 3
+UPDATE officers SET posting_location = 'Leh Base' WHERE officer_id = 3;
+
+-- 3. Update email domain
+UPDATE officers SET email = REPLACE(email, '@army.in', '@indianarmy.gov.in');
+
+-- 4. Update rank for specific officer
+UPDATE officers SET rank = 'Brigadier' WHERE officer_id = 6;
+
+-- 5. Update age based on commission date
+UPDATE officers SET age = TIMESTAMPDIFF(YEAR, commission_date, CURDATE()) + 25;
+
+-- ---------------------------------------------------
+-- TABLE 2: SOLDIERS QUERIES
+-- ---------------------------------------------------
+
+-- SELECT QUERIES
+-- 1. Get soldiers from 2nd Battalion
+SELECT * FROM soldiers WHERE unit = '2nd Battalion';
+
+-- 2. Find soldiers with rank Havildar
+SELECT name, age, posting_location FROM soldiers WHERE rank = 'Havildar';
+
+-- 3. Count soldiers by blood group
+SELECT blood_group, COUNT(*) as count FROM soldiers GROUP BY blood_group;
+
+-- 4. Get soldiers joined in last 5 years
+SELECT name, join_date FROM soldiers WHERE join_date > DATE_SUB(CURDATE(), INTERVAL 5 YEAR);
+
+-- 5. Find soldiers posted in Leh
+SELECT name, unit, contact_number FROM soldiers WHERE posting_location = 'Leh';
+
+-- ALTER QUERIES
+-- 1. Add marital_status column
+ALTER TABLE soldiers ADD COLUMN marital_status VARCHAR(20);
+
+-- 2. Modify unit column length
+ALTER TABLE soldiers MODIFY COLUMN unit VARCHAR(150);
+
+-- 3. Add index on posting_location
+ALTER TABLE soldiers ADD INDEX idx_posting (posting_location);
+
+-- 4. Add emergency_contact column
+ALTER TABLE soldiers ADD COLUMN emergency_contact VARCHAR(15);
+
+-- 5. Drop email column
+ALTER TABLE soldiers DROP COLUMN email;
+
+-- RENAME QUERIES
+-- 1. Rename soldiers table
+RENAME TABLE soldiers TO army_soldiers;
+
+-- 2. Rename join_date column
+ALTER TABLE soldiers CHANGE join_date enrollment_date DATE;
+
+-- 3. Rename unit column
+ALTER TABLE soldiers CHANGE unit battalion VARCHAR(100);
+
+-- 4. Rename blood_group column
+ALTER TABLE soldiers CHANGE blood_group blood_type VARCHAR(5);
+
+-- 5. Rename posting_location column
+ALTER TABLE soldiers CHANGE posting_location current_base VARCHAR(100);
+
+-- UPDATE QUERIES
+-- 1. Update marital status
+UPDATE soldiers SET marital_status = 'Married' WHERE age > 30;
+
+-- 2. Update contact number format
+UPDATE soldiers SET contact_number = CONCAT('+91-', contact_number);
+
+-- 3. Update rank for experienced soldiers
+UPDATE soldiers SET rank = 'Naik' WHERE TIMESTAMPDIFF(YEAR, join_date, CURDATE()) > 5 AND rank = 'Sepoy';
+
+-- 4. Update posting location
+UPDATE soldiers SET posting_location = 'Siachen Base' WHERE soldier_id IN (1, 3, 5);
+
+-- 5. Update unit name
+UPDATE soldiers SET unit = REPLACE(unit, 'Battalion', 'Bn');
+
+-- ---------------------------------------------------
+-- TABLE 3: BATTALIONS QUERIES
+-- ---------------------------------------------------
+
+-- SELECT QUERIES
+-- 1. Get active battalions
+SELECT * FROM battalions WHERE status = 'Active';
+
+-- 2. Find battalions in Northern Command
+SELECT name, location, soldiers_count FROM battalions WHERE region = 'Northern Command';
+
+-- 3. Count battalions by region
+SELECT region, COUNT(*) as battalion_count FROM battalions GROUP BY region;
+
+-- 4. Get battalions with more than 700 soldiers
+SELECT name, location, soldiers_count FROM battalions WHERE soldiers_count > 700;
+
+-- 5. Find battalions created before 2000
+SELECT name, creation_date, location FROM battalions WHERE creation_date < '2000-01-01';
+
+-- ALTER QUERIES
+-- 1. Add established_year column
+ALTER TABLE battalions ADD COLUMN established_year INT;
+
+-- 2. Modify remarks column type
+ALTER TABLE battalions MODIFY COLUMN remarks VARCHAR(500);
+
+-- 3. Add index on location
+ALTER TABLE battalions ADD INDEX idx_battalion_location (location);
+
+-- 4. Add contact_officer column
+ALTER TABLE battalions ADD COLUMN contact_officer VARCHAR(100);
+
+-- 5. Drop vehicles_count column
+ALTER TABLE battalions DROP COLUMN vehicles_count;
+
+-- RENAME QUERIES
+-- 1. Rename battalions table
+RENAME TABLE battalions TO army_battalions;
+
+-- 2. Rename soldiers_count column
+ALTER TABLE battalions CHANGE soldiers_count troop_strength INT;
+
+-- 3. Rename commander column
+ALTER TABLE battalions CHANGE commander commanding_officer VARCHAR(100);
+
+-- 4. Rename creation_date column
+ALTER TABLE battalions CHANGE creation_date formation_date DATE;
+
+-- 5. Rename status column
+ALTER TABLE battalions CHANGE status operational_status VARCHAR(50);
+
+-- UPDATE QUERIES
+-- 1. Update established_year from creation_date
+UPDATE battalions SET established_year = YEAR(creation_date);
+
+-- 2. Update soldiers count
+UPDATE battalions SET soldiers_count = soldiers_count + 50 WHERE battalion_id = 1;
+
+-- 3. Update status for old battalions
+UPDATE battalions SET status = 'Veteran' WHERE creation_date < '1990-01-01';
+
+-- 4. Update commander name
+UPDATE battalions SET commander = 'Col. Rajeev Kumar' WHERE battalion_id = 1;
+
+-- 5. Update region based on location
+UPDATE battalions SET region = 'Northern Command' WHERE location IN ('Srinagar', 'Leh', 'Siachen');
+
+-- ---------------------------------------------------
+-- TABLE 4: TRAINING_CENTERS QUERIES
+-- ---------------------------------------------------
+
+-- SELECT QUERIES
+-- 1. Get active training centers
+SELECT * FROM training_centers WHERE status = 'Active';
+
+-- 2. Find centers with capacity > 1000
+SELECT name, location, trainee_capacity FROM training_centers WHERE trainee_capacity > 1000;
+
+-- 3. Count centers by location
+SELECT location, COUNT(*) as center_count FROM training_centers GROUP BY location;
+
+-- 4. Get centers established before 2000
+SELECT name, established_year, location FROM training_centers WHERE established_year < 2000;
+
+-- 5. Find centers offering Infantry courses
+SELECT name, courses_offered FROM training_centers WHERE courses_offered LIKE '%Infantry%';
+
+-- ALTER QUERIES
+-- 1. Add website column
+ALTER TABLE training_centers ADD COLUMN website VARCHAR(100);
+
+-- 2. Modify courses_offered column length
+ALTER TABLE training_centers MODIFY COLUMN courses_offered VARCHAR(500);
+
+-- 3. Add index on established_year
+ALTER TABLE training_centers ADD INDEX idx_established_year (established_year);
+
+-- 4. Add director column
+ALTER TABLE training_centers ADD COLUMN director VARCHAR(100);
+
+-- 5. Drop phone_number column
+ALTER TABLE training_centers DROP COLUMN phone_number;
+
+-- RENAME QUERIES
+-- 1. Rename training_centers table
+RENAME TABLE training_centers TO army_training_centers;
+
+-- 2. Rename in_charge column
+ALTER TABLE training_centers CHANGE in_charge commandant VARCHAR(100);
+
+-- 3. Rename trainee_capacity column
+ALTER TABLE training_centers CHANGE trainee_capacity capacity INT;
+
+-- 4. Rename courses_offered column
+ALTER TABLE training_centers CHANGE courses_offered training_programs VARCHAR(500);
+
+-- 5. Rename contact_email column
+ALTER TABLE training_centers CHANGE contact_email email VARCHAR(100);
+
+-- UPDATE QUERIES
+-- 1. Update capacity
+UPDATE training_centers SET trainee_capacity = trainee_capacity + 100 WHERE center_id = 1;
+
+-- 2. Update status
+UPDATE training_centers SET status = 'Renovation' WHERE established_year < 1950;
+
+-- 3. Update courses offered
+UPDATE training_centers SET courses_offered = CONCAT(courses_offered, ', Advanced Tactics') WHERE center_id = 1;
+
+-- 4. Update contact email
+UPDATE training_centers SET contact_email = 'info.' || contact_email;
+
+-- 5. Update in_charge
+UPDATE training_centers SET in_charge = 'Brig. S. Thakur (Retired)' WHERE center_id = 1;
+
+-- ---------------------------------------------------
+-- TABLE 5: WEAPONS QUERIES
+-- ---------------------------------------------------
+
+-- SELECT QUERIES
+-- 1. Get active weapons
+SELECT * FROM weapons WHERE status = 'Active';
+
+-- 2. Find weapons with range > 10km
+SELECT name, type, range_km FROM weapons WHERE range_km > 10.00;
+
+-- 3. Count weapons by type
+SELECT type, COUNT(*) as weapon_count FROM weapons GROUP BY type;
+
+-- 4. Get weapons assigned to 2nd Infantry Battalion
+SELECT name, model, quantity FROM weapons WHERE assigned_unit = '2nd Infantry Battalion';
+
+-- 5. Find weapons from Indian manufacturers
+SELECT name, manufacturer FROM weapons WHERE manufacturer LIKE '%India%';
+
+-- ALTER QUERIES
+-- 1. Add purchase_date column
+ALTER TABLE weapons ADD COLUMN purchase_date DATE;
+
+-- 2. Modify remarks column length
+ALTER TABLE weapons MODIFY COLUMN remarks VARCHAR(500);
+
+-- 3. Add index on type
+ALTER TABLE weapons ADD INDEX idx_weapon_type (type);
+
+-- 4. Add last_service_date column
+ALTER TABLE weapons ADD COLUMN last_service_date DATE;
+
+-- 5. Drop model column
+ALTER TABLE weapons DROP COLUMN model;
+
+-- RENAME QUERIES
+-- 1. Rename weapons table
+RENAME TABLE weapons TO army_weapons;
+
+-- 2. Rename range_km column
+ALTER TABLE weapons CHANGE range_km effective_range DECIMAL(6,2);
+
+-- 3. Rename assigned_unit column
+ALTER TABLE weapons CHANGE assigned_unit deployed_unit VARCHAR(100);
+
+-- 4. Rename quantity column
+ALTER TABLE weapons CHANGE quantity stock_count INT;
+
+-- 5. Rename manufacturer column
+ALTER TABLE weapons CHANGE manufacturer made_by VARCHAR(100);
+
+-- UPDATE QUERIES
+-- 1. Update quantity
+UPDATE weapons SET quantity = quantity - 10 WHERE weapon_id = 1;
+
+-- 2. Update status
+UPDATE weapons SET status = 'Under Maintenance' WHERE weapon_id = 4;
+
+-- 3. Update range
+UPDATE weapons SET range_km = range_km * 1.1 WHERE type = 'Rifle';
+
+-- 4. Update assigned unit
+UPDATE weapons SET assigned_unit = '3rd Infantry Battalion' WHERE weapon_id = 1;
+
+-- 5. Update manufacturer
+UPDATE weapons SET manufacturer = 'OFB India (Upgraded)' WHERE manufacturer = 'OFB India';
+
+-- ---------------------------------------------------
+-- TABLE 6: MISSIONS QUERIES
+-- ---------------------------------------------------
+
+-- SELECT QUERIES
+-- 1. Get completed missions
+SELECT * FROM missions WHERE status = 'Completed';
+
+-- 2. Find ongoing missions
+SELECT name, location, commander FROM missions WHERE status = 'Ongoing';
+
+-- 3. Count missions by type
+SELECT type, COUNT(*) as mission_count FROM missions GROUP BY type;
+
+-- 4. Get missions in Kashmir region
+SELECT name, type, location FROM missions WHERE location LIKE '%Kashmir%' OR location LIKE '%LoC%';
+
+-- 5. Find missions starting in 2023
+SELECT name, start_date, location FROM missions WHERE YEAR(start_date) = 2023;
+
+-- ALTER QUERIES
+-- 1. Add mission_code column
+ALTER TABLE missions ADD COLUMN mission_code VARCHAR(20);
+
+-- 2. Modify objective column length
+ALTER TABLE missions MODIFY COLUMN objective VARCHAR(1000);
+
+-- 3. Add index on start_date
+ALTER TABLE missions ADD INDEX idx_mission_start (start_date);
+
+-- 4. Add budget column
+ALTER TABLE missions ADD COLUMN budget DECIMAL(12,2);
+
+-- 5. Drop remarks column
+ALTER TABLE missions DROP COLUMN remarks;
+
+-- RENAME QUERIES
+-- 1. Rename missions table
+RENAME TABLE missions TO army_operations;
+
+-- 2. Rename commander column
+ALTER TABLE missions CHANGE commander mission_commander VARCHAR(100);
+
+-- 3. Rename objective column
+ALTER TABLE missions CHANGE objective mission_objective TEXT;
+
+-- 4. Rename start_date column
+ALTER TABLE missions CHANGE start_date operation_start DATE;
+
+-- 5. Rename end_date column
+ALTER TABLE missions CHANGE end_date operation_end DATE;
+
+-- UPDATE QUERIES
+-- 1. Update mission status
+UPDATE missions SET status = 'Completed' WHERE end_date IS NOT NULL AND status = 'Ongoing';
+
+-- 2. Update commander
+UPDATE missions SET commander = 'Col. Rajeev Sharma' WHERE mission_id = 1;
+
+-- 3. Update location
+UPDATE missions SET location = 'Siachen Glacier, J&K' WHERE mission_id = 1;
+
+-- 4. Add end date for completed missions
+UPDATE missions SET end_date = DATE_ADD(start_date, INTERVAL 30 DAY) WHERE status = 'Completed' AND end_date IS NULL;
+
+-- 5. Update mission type
+UPDATE missions SET type = 'Combat Operation' WHERE type = 'Combat';
+
+-- ---------------------------------------------------
+-- TABLE 7: VEHICLES QUERIES
+-- ---------------------------------------------------
+
+-- SELECT QUERIES
+-- 1. Get active vehicles
+SELECT * FROM vehicles WHERE status = 'Active';
+
+-- 2. Find vehicles assigned to Infantry units
+SELECT name, type, registration_no FROM vehicles WHERE assigned_unit LIKE '%Infantry%';
+
+-- 3. Count vehicles by type
+SELECT type, COUNT(*) as vehicle_count FROM vehicles GROUP BY type;
+
+-- 4. Get vehicles with capacity > 10
+SELECT name, type, capacity FROM vehicles WHERE capacity > 10;
+
+-- 5. Find vehicles in service for more than 5 years
+SELECT name, in_service_date FROM vehicles WHERE in_service_date < DATE_SUB(CURDATE(), INTERVAL 5 YEAR);
+
+-- ALTER QUERIES
+-- 1. Add fuel_type column
+ALTER TABLE vehicles ADD COLUMN fuel_type VARCHAR(20);
+
+-- 2. Modify remarks column length
+ALTER TABLE vehicles MODIFY COLUMN remarks VARCHAR(500);
+
+-- 3. Add index on assigned_unit
+ALTER TABLE vehicles ADD INDEX idx_vehicle_unit (assigned_unit);
+
+-- 4. Add mileage column
+ALTER TABLE vehicles ADD COLUMN mileage DECIMAL(8,2);
+
+-- 5. Drop capacity column
+ALTER TABLE vehicles DROP COLUMN capacity;
+
+-- RENAME QUERIES
+-- 1. Rename vehicles table
+RENAME TABLE vehicles TO army_vehicles;
+
+-- 2. Rename registration_no column
+ALTER TABLE vehicles CHANGE registration_no reg_number VARCHAR(50);
+
+-- 3. Rename assigned_unit column
+ALTER TABLE vehicles CHANGE assigned_unit deployed_unit VARCHAR(100);
+
+-- 4. Rename in_service_date column
+ALTER TABLE vehicles CHANGE in_service_date service_start_date DATE;
+
+-- 5. Rename name column
+ALTER TABLE vehicles CHANGE name vehicle_name VARCHAR(100);
+
+-- UPDATE QUERIES
+-- 1. Update status
+UPDATE vehicles SET status = 'Under Maintenance' WHERE vehicle_id = 9;
+
+-- 2. Update fuel type
+UPDATE vehicles SET fuel_type = 'Diesel' WHERE type IN ('Truck', 'Tank', 'SUV');
+
+-- 3. Update assigned unit
+UPDATE vehicles SET assigned_unit = '2nd Infantry Battalion' WHERE vehicle_id = 1;
+
+-- 4. Update mileage
+UPDATE vehicles SET mileage = 8.5 WHERE type = 'Truck';
+
+-- 5. Update capacity
+UPDATE vehicles SET capacity = capacity + 2 WHERE type = 'Jeep';
+
+-- ---------------------------------------------------
+-- TABLE 8: MEDICAL_RECORDS QUERIES
+-- ---------------------------------------------------
+
+-- SELECT QUERIES
+-- 1. Get records with blood group O+
+SELECT * FROM medical_records WHERE blood_group = 'O+';
+
+-- 2. Find soldiers with perfect eyesight
+SELECT soldier_id, height, weight FROM medical_records WHERE eye_sight = '6/6';
+
+-- 3. Count records by blood group
+SELECT blood_group, COUNT(*) as count FROM medical_records GROUP BY blood_group;
+
+-- 4. Get records with allergies
+SELECT soldier_id, allergies, last_checkup FROM medical_records WHERE allergies != 'None';
+
+-- 5. Find records checked in last 6 months
+SELECT soldier_id, last_checkup, doctor FROM medical_records WHERE last_checkup > DATE_SUB(CURDATE(), INTERVAL 6 MONTH);
+
+-- ALTER QUERIES
+-- 1. Add bmi column
+ALTER TABLE medical_records ADD COLUMN bmi DECIMAL(4,2);
+
+-- 2. Modify allergies column length
+ALTER TABLE medical_records MODIFY COLUMN allergies VARCHAR(200);
+
+-- 3. Add index on blood_group
+ALTER TABLE medical_records ADD INDEX idx_blood_group (blood_group);
+
+-- 4. Add dental_status column
+ALTER TABLE medical_records ADD COLUMN dental_status VARCHAR(50);
+
+-- 5. Drop height column
+ALTER TABLE medical_records DROP COLUMN height;
+
+-- RENAME QUERIES
+-- 1. Rename medical_records table
+RENAME TABLE medical_records TO soldier_medical_history;
+
+-- 2. Rename eye_sight column
+ALTER TABLE medical_records CHANGE eye_sight vision VARCHAR(10);
+
+-- 3. Rename last_checkup column
+ALTER TABLE medical_records CHANGE last_checkup last_medical_exam DATE;
+
+-- 4. Rename injuries column
+ALTER TABLE medical_records CHANGE injuries medical_injuries VARCHAR(100);
+
+-- 5. Rename doctor column
+ALTER TABLE medical_records CHANGE doctor medical_officer VARCHAR(100);
+
+-- UPDATE QUERIES
+-- 1. Update BMI calculation
+UPDATE medical_records SET bmi = weight / ((height * 0.0254) * (height * 0.0254));
+
+-- 2. Update last checkup date
+UPDATE medical_records SET last_checkup = CURDATE() WHERE last_checkup < '2024-01-01';
+
+-- 3. Update allergies
+UPDATE medical_records SET allergies = 'Seasonal' WHERE allergies = 'Pollen';
+
+-- 4. Update doctor name
+UPDATE medical_records SET doctor = 'Dr. A. Sharma (Senior)' WHERE doctor = 'Dr. A. Sharma';
+
+-- 5. Update blood pressure
+UPDATE medical_records SET blood_pressure = '120/80' WHERE blood_pressure IS NULL;
+
+-- ---------------------------------------------------
+-- TABLE 9: LEAVE_RECORDS QUERIES
+-- ---------------------------------------------------
+
+-- SELECT QUERIES
+-- 1. Get approved leave records
+SELECT * FROM leave_records WHERE status = 'Approved';
+
+-- 2. Find leave records for family visits
+SELECT soldier_id, start_date, end_date FROM leave_records WHERE reason LIKE '%family%';
+
+-- 3. Count leaves by type
+SELECT type, COUNT(*) as leave_count FROM leave_records GROUP BY type;
+
+-- 4. Get ongoing leaves
+SELECT soldier_id, start_date, end_date FROM leave_records WHERE start_date <= CURDATE() AND end_date >= CURDATE();
+
+-- 5. Find emergency leaves
+SELECT soldier_id, reason, application_date FROM leave_records WHERE type = 'Emergency Leave';
+
+-- ALTER QUERIES
+-- 1. Add leave_days column
+ALTER TABLE leave_records ADD COLUMN leave_days INT;
+
+-- 2. Modify reason column length
+ALTER TABLE leave_records MODIFY COLUMN reason VARCHAR(500);
+
+-- 3. Add index on soldier_id
+ALTER TABLE leave_records ADD INDEX idx_soldier_leave (soldier_id);
+
+-- 4. Add contact_during_leave column
+ALTER TABLE leave_records ADD COLUMN contact_during_leave VARCHAR(15);
+
+-- 5. Drop application_date column
+ALTER TABLE leave_records DROP COLUMN application_date;
+
+-- RENAME QUERIES
+-- 1. Rename leave_records table
+RENAME TABLE leave_records TO soldier_leave_history;
+
+-- 2. Rename approved_by column
+ALTER TABLE leave_records CHANGE approved_by authorized_by VARCHAR(100);
+
+-- 3. Rename start_date column
+ALTER TABLE leave_records CHANGE start_date leave_start DATE;
+
+-- 4. Rename end_date column
+ALTER TABLE leave_records CHANGE end_date leave_end DATE;
+
+-- 5. Rename type column
+ALTER TABLE leave_records CHANGE type leave_type VARCHAR(50);
+
+-- UPDATE QUERIES
+-- 1. Update leave days calculation
+UPDATE leave_records SET leave_days = DATEDIFF(end_date, start_date) + 1;
+
+-- 2. Update status
+UPDATE leave_records SET status = 'Expired' WHERE end_date < CURDATE() AND status = 'Approved';
+
+-- 3. Update reason
+UPDATE leave_records SET reason = CONCAT('Official: ', reason) WHERE type = 'Casual Leave';
+
+-- 4. Update approved by
+UPDATE leave_records SET approved_by = 'Col. Rajeev Sharma' WHERE leave_id = 1;
+
+-- 5. Update application date
+UPDATE leave_records SET application_date = DATE_SUB(start_date, INTERVAL 7 DAY) WHERE application_date IS NULL;
+
+-- ---------------------------------------------------
+-- TABLE 10: PROMOTIONS QUERIES
+-- ---------------------------------------------------
+
+-- SELECT QUERIES
+-- 1. Get approved promotions
+SELECT * FROM promotions WHERE status = 'Approved';
+
+-- 2. Find promotions in 2023
+SELECT soldier_id, old_rank, new_rank FROM promotions WHERE YEAR(promotion_date) = 2023;
+
+-- 3. Count promotions by new rank
+SELECT new_rank, COUNT(*) as promotion_count FROM promotions GROUP BY new_rank;
+
+-- 4. Get promotions with document links
+SELECT soldier_id, promotion_date, document_link FROM promotions WHERE document_link IS NOT NULL;
+
+-- 5. Find promotions for leadership roles
+SELECT soldier_id, reason FROM promotions WHERE reason LIKE '%leadership%';
+
+-- ALTER QUERIES
+-- 1. Add promotion_score column
+ALTER TABLE promotions ADD COLUMN promotion_score DECIMAL(5,2);
+
+-- 2. Modify remarks column length
+ALTER TABLE promotions MODIFY COLUMN remarks VARCHAR(500);
+
+-- 3. Add index on promotion_date
+ALTER TABLE promotions ADD INDEX idx_promotion_date (promotion_date);
+
+-- 4. Add review_committee column
+ALTER TABLE promotions ADD COLUMN review_committee VARCHAR(100);
+
+-- 5. Drop document_link column
+ALTER TABLE promotions DROP COLUMN document_link;
+
+-- RENAME QUERIES
+-- 1. Rename promotions table
+RENAME TABLE promotions TO soldier_promotions;
+
+-- 2. Rename old_rank column
+ALTER TABLE promotions CHANGE old_rank previous_rank VARCHAR(50);
+
+-- 3. Rename new_rank column
+ALTER TABLE promotions CHANGE new_rank current_rank VARCHAR(50);
+
+-- 4. Rename promotion_date column
+ALTER TABLE promotions CHANGE promotion_date rank_date DATE;
+
+-- 5. Rename approved_by column
+ALTER TABLE promotions CHANGE approved_by authorized_by VARCHAR(100);
+
+-- UPDATE QUERIES
+-- 1. Update promotion score
+UPDATE promotions SET promotion_score = 85.5 WHERE promotion_id = 1;
+
+-- 2. Update status
+UPDATE promotions SET status = 'Processed' WHERE status = 'Approved';
+
+-- 3. Update reason
+UPDATE promotions SET reason = CONCAT('Meritorious: ', reason) WHERE promotion_score > 80;
+
+-- 4. Update approved by
+UPDATE promotions SET approved_by = 'Brig. V. Kumar' WHERE promotion_id = 1;
+
+-- 5. Update promotion date
+UPDATE promotions SET promotion_date = DATE_ADD(promotion_date, INTERVAL 1 DAY) WHERE DAY(promotion_date) = 1;
+
+-- ---------------------------------------------------
+-- TABLE 11: EVENTS QUERIES
+-- ---------------------------------------------------
+
+-- SELECT QUERIES
+-- 1. Get completed events
+SELECT * FROM events WHERE status = 'Completed';
+
+-- 2. Find upcoming events
+SELECT name, date, location FROM events WHERE date > CURDATE();
+
+-- 3. Count events by type
+SELECT type, COUNT(*) as event_count FROM events GROUP BY type;
+
+-- 4. Get events in Delhi
+SELECT name, date, organized_by FROM events WHERE location LIKE '%Delhi%';
+
+-- 5. Find ceremonial events
+SELECT name, date, description FROM events WHERE type = 'Ceremonial';
+
+-- ALTER QUERIES
+-- 1. Add budget column
+ALTER TABLE events ADD COLUMN budget DECIMAL(12,2);
+
+-- 2. Modify description column length
+ALTER TABLE events MODIFY COLUMN description VARCHAR(1000);
+
+-- 3. Add index on date
+ALTER TABLE events ADD INDEX idx_event_date (date);
+
+-- 4. Add participants_count column
+ALTER TABLE events ADD COLUMN participants_count INT;
+
+-- 5. Drop phone column
+ALTER TABLE events DROP COLUMN phone;
+
+-- RENAME QUERIES
+-- 1. Rename events table
+RENAME TABLE events TO army_events;
+
+-- 2. Rename organized_by column
+ALTER TABLE events CHANGE organized_by organizer VARCHAR(100);
+
+-- 3. Rename contact_person column
+ALTER TABLE events CHANGE contact_person coordinator VARCHAR(100);
+
+-- 4. Rename date column
+ALTER TABLE events CHANGE date event_date DATE;
+
+-- 5. Rename type column
+ALTER TABLE events CHANGE type event_type VARCHAR(50);
+
+-- UPDATE QUERIES
+-- 1. Update status
+UPDATE events SET status = 'Cancelled' WHERE event_date < '2023-01-01' AND status = 'Scheduled';
+
+-- 2. Update location
+UPDATE events SET location = 'New Delhi, India Gate' WHERE event_id = 1;
+
+-- 3. Update contact person
+UPDATE events SET contact_person = 'Col. S. Raghavan (Retired)' WHERE event_id = 1;
+
+-- 4. Update description
+UPDATE events SET description = CONCAT('Annual: ', description) WHERE event_type = 'Ceremonial';
+
+-- 5. Update event date
+UPDATE events SET date = DATE_ADD(date, INTERVAL 1 YEAR) WHERE status = 'Scheduled';
+
+-- ---------------------------------------------------
+-- TABLE 12: DISCIPLINARY_ACTIONS QUERIES
+-- ---------------------------------------------------
+
+-- SELECT QUERIES
+-- 1. Get closed disciplinary actions
+SELECT * FROM disciplinary_actions WHERE status = 'Closed';
+
+-- 2. Find actions for unauthorized absence
+SELECT soldier_id, date, punishment FROM disciplinary_actions WHERE action_type LIKE '%Unauthorized%';
+
+-- 3. Count actions by type
+SELECT action_type, COUNT(*) as action_count FROM disciplinary_actions GROUP BY action_type;
+
+-- 4. Get actions from last 3 months
+SELECT soldier_id, action_type, date FROM disciplinary_actions WHERE date > DATE_SUB(CURDATE(), INTERVAL 3 MONTH);
+
+-- 5. Find actions reviewed by specific officer
+SELECT soldier_id, action_type, punishment FROM disciplinary_actions WHERE reviewed_by = 'Brig. V. Kumar';
+
+-- ALTER QUERIES
+-- 1. Add severity_level column
+ALTER TABLE disciplinary_actions ADD COLUMN severity_level VARCHAR(20);
+
+-- 2. Modify punishment column length
+ALTER TABLE disciplinary_actions MODIFY COLUMN punishment VARCHAR(500);
+
+-- 3. Add index on soldier_id
+ALTER TABLE disciplinary_actions ADD INDEX idx_soldier_discipline (soldier_id);
+
+-- 4. Add appeal_status column
+ALTER TABLE disciplinary_actions ADD COLUMN appeal_status VARCHAR(50);
+
+-- 5. Drop remarks column
+ALTER TABLE disciplinary_actions DROP COLUMN remarks;
+
+-- RENAME QUERIES
+-- 1. Rename disciplinary_actions table
+RENAME TABLE disciplinary_actions TO soldier_disciplinary_records;
+
+-- 2. Rename action_type column
+ALTER TABLE disciplinary_actions CHANGE action_type violation_type VARCHAR(100);
+
+-- 3. Rename punished_by column
+ALTER TABLE disciplinary_actions CHANGE punished_by disciplinary_officer VARCHAR(100);
+
+-- 4. Rename date column
+ALTER TABLE disciplinary_actions CHANGE date action_date DATE;
+
+-- 5. Rename reviewed_by column
+ALTER TABLE disciplinary_actions CHANGE reviewed_by reviewed_officer VARCHAR(100);
+
+-- UPDATE QUERIES
+-- 1. Update severity level
+UPDATE disciplinary_actions SET severity_level = 'High' WHERE action_type LIKE '%Unauthorized%';
+
+-- 2. Update status
+UPDATE disciplinary_actions SET status = 'Appealed' WHERE action_id IN (1, 3, 5);
+
+-- 3. Update punishment
+UPDATE disciplinary_actions SET punishment = CONCAT('Strict: ', punishment) WHERE severity_level = 'High';
+
+-- 4. Update reviewed by
+UPDATE disciplinary_actions SET reviewed_by = 'Col. S. Rao (Senior)' WHERE action_id = 2;
+
+-- 5. Update action date
+UPDATE disciplinary_actions SET date = DATE_ADD(date, INTERVAL 1 DAY) WHERE DAY(date) = 31;
+
+-- ---------------------------------------------------
+-- TABLE 13: ACCOMMODATIONS QUERIES
+-- ---------------------------------------------------
+
+-- SELECT QUERIES
+-- 1. Get occupied accommodations
+SELECT * FROM accommodations WHERE status = 'Occupied';
+
+-- 2. Find accommodations in Delhi Cantt
+SELECT soldier_id, room_no, block FROM accommodations WHERE location = 'Delhi Cantt';
+
+-- 3. Count accommodations by location
+SELECT location, COUNT(*) as accommodation_count FROM accommodations GROUP BY location;
+
+-- 4. Get accommodations assigned in 2023
+SELECT soldier_id, room_no, assigned_date FROM accommodations WHERE YEAR(assigned_date) = 2023;
+
+-- 5. Find shared accommodations
+SELECT soldier_id, room_no, remarks FROM accommodations WHERE remarks LIKE '%Shared%';
+
+-- ALTER QUERIES
+-- 1. Add room_type column
+ALTER TABLE accommodations ADD COLUMN room_type VARCHAR(50);
+
+-- 2. Modify remarks column length
+ALTER TABLE accommodations MODIFY COLUMN remarks VARCHAR(500);
+
+-- 3. Add index on location
+ALTER TABLE accommodations ADD INDEX idx_accommodation_location (location);
+
+-- 4. Add monthly_rent column
+ALTER TABLE accommodations ADD COLUMN monthly_rent DECIMAL(8,2);
+
+-- 5. Drop caretaker column
+ALTER TABLE accommodations DROP COLUMN caretaker;
+
+-- RENAME QUERIES
+-- 1. Rename accommodations table
+RENAME TABLE accommodations TO soldier_accommodations;
+
+-- 2. Rename room_no column
+ALTER TABLE accommodations CHANGE room_no room_number VARCHAR(10);
+
+-- 3. Rename assigned_date column
+ALTER TABLE accommodations CHANGE assigned_date allocation_date DATE;
+
+-- 4. Rename vacated_date column
+ALTER TABLE accommodations CHANGE vacated_date vacation_date DATE;
+
+-- 5. Rename caretaker column
+ALTER TABLE accommodations CHANGE caretaker supervisor VARCHAR(100);
+
+-- UPDATE QUERIES
+-- 1. Update room type
+UPDATE accommodations SET room_type = 'Single' WHERE remarks LIKE '%Single%';
+
+-- 2. Update status
+UPDATE accommodations SET status = 'Vacant' WHERE vacated_date IS NOT NULL;
+
+-- 3. Update monthly rent
+UPDATE accommodations SET monthly_rent = 5000.00 WHERE room_type = 'Single';
+
+-- 4. Update caretaker
+UPDATE accommodations SET caretaker = 'Mr. Rajiv Bhatia (Senior)' WHERE acc_id = 1;
+
+-- 5. Update assigned date
+UPDATE accommodations SET assigned_date = DATE_ADD(assigned_date, INTERVAL 1 MONTH) WHERE status = 'Occupied';
+
+-- ---------------------------------------------------
+-- TABLE 14: PAYROLL QUERIES
+-- ---------------------------------------------------
+
+-- SELECT QUERIES
+-- 1. Get processed payroll for June 2025
+SELECT * FROM payroll WHERE month = 'June 2025' AND status = 'Processed';
+
+-- 2. Find payroll with net pay > 50000
+SELECT soldier_id, basic_pay, net_pay FROM payroll WHERE net_pay > 50000;
+
+-- 3. Calculate total payroll by month
+SELECT month, SUM(net_pay) as total_payroll FROM payroll GROUP BY month;
+
+-- 4. Get payroll processed in last 30 days
+SELECT soldier_id, month, processed_date FROM payroll WHERE processed_date > DATE_SUB(CURDATE(), INTERVAL 30 DAY);
+
+-- 5. Find payroll with high deductions
+SELECT soldier_id, deductions, net_pay FROM payroll WHERE deductions > 2000;
+
+-- ALTER QUERIES
+-- 1. Add tax_amount column
+ALTER TABLE payroll ADD COLUMN tax_amount DECIMAL(10,2);
+
+-- 2. Modify month column format
+ALTER TABLE payroll MODIFY COLUMN month VARCHAR(25);
+
+-- 3. Add index on soldier_id
+ALTER TABLE payroll ADD INDEX idx_soldier_payroll (soldier_id);
+
+-- 4. Add bank_account column
+ALTER TABLE payroll ADD COLUMN bank_account VARCHAR(20);
+
+-- 5. Drop processed_date column
+ALTER TABLE payroll DROP COLUMN processed_date;
+
+-- RENAME QUERIES
+-- 1. Rename payroll table
+RENAME TABLE payroll TO soldier_payroll;
+
+-- 2. Rename basic_pay column
+ALTER TABLE payroll CHANGE basic_pay base_salary DECIMAL(10,2);
+
+-- 3. Rename net_pay column
+ALTER TABLE payroll CHANGE net_pay final_salary DECIMAL(10,2);
+
+-- 4. Rename month column
+ALTER TABLE payroll CHANGE month pay_month VARCHAR(20);
+
+-- 5. Rename deductions column
+ALTER TABLE payroll CHANGE deductions salary_deductions DECIMAL(10,2);
+
+-- UPDATE QUERIES
+-- 1. Update tax amount
+UPDATE payroll SET tax_amount = basic_pay * 0.1;
+
+-- 2. Update net pay calculation
+UPDATE payroll SET net_pay = basic_pay + hra + da - deductions;
+
+-- 3. Update status
+UPDATE payroll SET status = 'Pending' WHERE processed_date > CURDATE();
+
+-- 4. Update month format
+UPDATE payroll SET month = DATE_FORMAT(STR_TO_DATE(CONCAT('01 ', month), '%d %M %Y'), '%M %Y');
+
+-- 5. Update deductions
+UPDATE payroll SET deductions = deductions + 500 WHERE net_pay > 55000;
+
+-- ---------------------------------------------------
+-- TABLE 15: ARMS_INVENTORY QUERIES
+-- ---------------------------------------------------
+
+-- SELECT QUERIES
+-- 1. Get weapons in service
+SELECT * FROM arms_inventory WHERE status = 'In Service';
+
+-- 2. Find inventory in Delhi Armory
+SELECT item_name, quantity, condition FROM arms_inventory WHERE location = 'Delhi Armory';
+
+-- 3. Count inventory by type
+SELECT type, COUNT(*) as item_count FROM arms_inventory GROUP BY type;
+
+-- 4. Get items checked in last month
+SELECT item_name, last_checked, checked_by FROM arms_inventory WHERE last_checked > DATE_SUB(CURDATE(), INTERVAL 1 MONTH);
+
+-- 5. Find restricted items
+SELECT item_name, quantity, location FROM arms_inventory WHERE status = 'Restricted';
+
+-- ALTER QUERIES
+-- 1. Add unit_price column
+ALTER TABLE arms_inventory ADD COLUMN unit_price DECIMAL(10,2);
+
+-- 2. Modify remarks column length
+ALTER TABLE arms_inventory MODIFY COLUMN remarks VARCHAR(500);
+
+-- 3. Add index on item_name
+ALTER TABLE arms_inventory ADD INDEX idx_item_name (item_name);
+
+-- 4. Add supplier column
+ALTER TABLE arms_inventory ADD COLUMN supplier VARCHAR(100);
+
+-- 5. Drop condition column
+ALTER TABLE arms_inventory DROP COLUMN condition;
+
+-- RENAME QUERIES
+-- 1. Rename arms_inventory table
+RENAME TABLE arms_inventory TO army_arms_inventory;
+
+-- 2. Rename item_name column
+ALTER TABLE arms_inventory CHANGE item_name equipment_name VARCHAR(100);
+
+-- 3. Rename last_checked column
+ALTER TABLE arms_inventory CHANGE last_checked last_inspection DATE;
+
+-- ---------------------------------------------------
+-- TABLE 16: COMM_CHANNELS QUERIES
+-- ---------------------------------------------------
+
+-- SELECT QUERIES
+-- 1. Get active communication channels
+SELECT * FROM comm_channels WHERE status = 'Active';
+
+-- 2. Find satellite communication channels
+SELECT name, frequency, range_km FROM comm_channels WHERE type = 'Satellite';
+
+-- 3. Count channels by type
+SELECT type, COUNT(*) as channel_count FROM comm_channels GROUP BY type;
+
+-- 4. Get channels with range > 100km
+SELECT name, type, range_km FROM comm_channels WHERE range_km > 100.00;
+
+-- 5. Find channels needing maintenance
+SELECT name, last_maintenance, technician FROM comm_channels WHERE last_maintenance < DATE_SUB(CURDATE(), INTERVAL 6 MONTH);
+
+-- ALTER QUERIES
+-- 1. Add encryption_type column
+ALTER TABLE comm_channels ADD COLUMN encryption_type VARCHAR(50);
+
+-- 2. Modify remarks column length
+ALTER TABLE comm_channels MODIFY COLUMN remarks VARCHAR(500);
+
+-- 3. Add index on type
+ALTER TABLE comm_channels ADD INDEX idx_channel_type (type);
+
+-- 4. Add bandwidth column
+ALTER TABLE comm_channels ADD COLUMN bandwidth VARCHAR(20);
+
+-- 5. Drop frequency column
+ALTER TABLE comm_channels DROP COLUMN frequency;
+
+-- RENAME QUERIES
+-- 1. Rename comm_channels table
+RENAME TABLE comm_channels TO army_communication_channels;
+
+-- 2. Rename name column
+ALTER TABLE comm_channels CHANGE name channel_name VARCHAR(100);
+
+-- 3. Rename range_km column
+ALTER TABLE comm_channels CHANGE range_km coverage_range DECIMAL(6,2);
+
+-- 4. Rename assigned_unit column
+ALTER TABLE comm_channels CHANGE assigned_unit deployed_unit VARCHAR(100);
+
+-- 5. Rename last_maintenance column
+ALTER TABLE comm_channels CHANGE last_maintenance last_service DATE;
+
+-- UPDATE QUERIES
+-- 1. Update encryption type
+UPDATE comm_channels SET encryption_type = 'AES-256' WHERE type = 'Satellite';
+
+-- 2. Update status
+UPDATE comm_channels SET status = 'Under Repair' WHERE channel_id = 3;
+
+-- 3. Update range
+UPDATE comm_channels SET range_km = range_km * 1.1 WHERE type = 'Radio HF';
+
+-- 4. Update technician
+UPDATE comm_channels SET technician = 'Hav. R. Thakur (Senior)' WHERE channel_id = 1;
+
+-- 5. Update last maintenance
+UPDATE comm_channels SET last_maintenance = CURDATE() WHERE status = 'Active';
+
+-- ---------------------------------------------------
+-- TABLE 17: INTELLIGENCE_REPORTS QUERIES
+-- ---------------------------------------------------
+
+-- SELECT QUERIES
+-- 1. Get high priority intelligence reports
+SELECT * FROM intelligence_reports WHERE priority = 'High';
+
+-- 2. Find reviewed reports
+SELECT report_id, source, report_date FROM intelligence_reports WHERE status = 'Reviewed';
+
+-- 3. Count reports by source type
+SELECT source, COUNT(*) as report_count FROM intelligence_reports GROUP BY source;
+
+-- 4. Get reports from Kashmir region
+SELECT report_id, content, location FROM intelligence_reports WHERE location LIKE '%Kashmir%' OR location LIKE '%LoC%';
+
+-- 5. Find reports from last 7 days
+SELECT report_id, source, report_date FROM intelligence_reports WHERE report_date > DATE_SUB(CURDATE(), INTERVAL 7 DAY);
+
+-- ALTER QUERIES
+-- 1. Add classification_level column
+ALTER TABLE intelligence_reports ADD COLUMN classification_level VARCHAR(50);
+
+-- 2. Modify content column length
+ALTER TABLE intelligence_reports MODIFY COLUMN content VARCHAR(2000);
+
+-- 3. Add index on priority
+ALTER TABLE intelligence_reports ADD INDEX idx_report_priority (priority);
+
+-- 4. Add action_taken column
+ALTER TABLE intelligence_reports ADD COLUMN action_taken VARCHAR(200);
+
+-- 5. Drop remarks column
+ALTER TABLE intelligence_reports DROP COLUMN remarks;
+
+-- RENAME QUERIES
+-- 1. Rename intelligence_reports table
+RENAME TABLE intelligence_reports TO army_intelligence;
+
+-- 2. Rename source column
+ALTER TABLE intelligence_reports CHANGE source intelligence_source VARCHAR(100);
+
+-- 3. Rename content column
+ALTER TABLE intelligence_reports CHANGE content report_content TEXT;
+
+-- 4. Rename report_date column
+ALTER TABLE intelligence_reports CHANGE report_date received_date DATE;
+
+-- 5. Rename reviewed_by column
+ALTER TABLE intelligence_reports CHANGE reviewed_by assessed_by VARCHAR(100);
+
+-- UPDATE QUERIES
+-- 1. Update classification level
+UPDATE intelligence_reports SET classification_level = 'Top Secret' WHERE priority = 'Critical';
+
+-- 2. Update status
+UPDATE intelligence_reports SET status = 'Action Required' WHERE priority = 'High' AND status = 'Reviewed';
+
+-- 3. Update reviewed by
+UPDATE intelligence_reports SET reviewed_by = 'Col. V. Sharma (Senior Analyst)' WHERE report_id = 1;
+
+-- 4. Update location format
+UPDATE intelligence_reports SET location = CONCAT('Sector: ', location) WHERE location LIKE '%J&K%';
+
+-- 5. Update report date
+UPDATE intelligence_reports SET report_date = DATE_ADD(report_date, INTERVAL 1 DAY) WHERE DAY(report_date) = 1;
+
+-- ---------------------------------------------------
+-- TABLE 18: EQUIPMENT QUERIES
+-- ---------------------------------------------------
+
+-- SELECT QUERIES
+-- 1. Get active equipment
+SELECT * FROM equipment WHERE status = 'Active';
+
+-- 2. Find equipment assigned to Special Forces
+SELECT name, type, condition FROM equipment WHERE assigned_unit LIKE '%Special%';
+
+-- 3. Count equipment by type
+SELECT type, COUNT(*) as equipment_count FROM equipment GROUP BY type;
+
+-- 4. Get surveillance equipment
+SELECT name, model, quantity FROM equipment WHERE type = 'Surveillance';
+
+-- 5. Find equipment in excellent condition
+SELECT name, location, assigned_unit FROM equipment WHERE condition = 'Excellent';
+
+-- ALTER QUERIES
+-- 1. Add purchase_date column
+ALTER TABLE equipment ADD COLUMN purchase_date DATE;
+
+-- 2. Modify remarks column length
+ALTER TABLE equipment MODIFY COLUMN remarks VARCHAR(500);
+
+-- 3. Add index on assigned_unit
+ALTER TABLE equipment ADD INDEX idx_equipment_unit (assigned_unit);
+
+-- 4. Add warranty_period column
+ALTER TABLE equipment ADD COLUMN warranty_period INT;
+
+-- 5. Drop model column
+ALTER TABLE equipment DROP COLUMN model;
+
+-- RENAME QUERIES
+-- 1. Rename equipment table
+RENAME TABLE equipment TO army_equipment;
+
+-- 2. Rename name column
+ALTER TABLE equipment CHANGE name equipment_name VARCHAR(100);
+
+-- 3. Rename condition column
+ALTER TABLE equipment CHANGE condition equipment_condition VARCHAR(50);
+
+-- 4. Rename assigned_unit column
+ALTER TABLE equipment CHANGE assigned_unit deployed_unit VARCHAR(100);
+
+-- 5. Rename status column
+ALTER TABLE equipment CHANGE status operational_status VARCHAR(50);
+
+-- UPDATE QUERIES
+-- 1. Update purchase date
+UPDATE equipment SET purchase_date = '2023-01-15' WHERE equipment_id = 1;
+
+-- 2. Update warranty period
+UPDATE equipment SET warranty_period = 24 WHERE type = 'Electronics';
+
+-- 3. Update condition
+UPDATE equipment SET condition = 'Good' WHERE equipment_id = 5;
+
+-- 4. Update assigned unit
+UPDATE equipment SET assigned_unit = 'Special Forces Unit Alpha' WHERE equipment_id = 2;
+
+-- 5. Update quantity
+UPDATE equipment SET quantity = quantity + 10 WHERE equipment_id = 1;
+
+-- ---------------------------------------------------
+-- TABLE 19: LOGISTICS QUERIES
+-- ---------------------------------------------------
+
+-- SELECT QUERIES
+-- 1. Get delivered logistics items
+SELECT * FROM logistics WHERE status = 'Delivered';
+
+-- 2. Find ammunition logistics
+SELECT item_name, quantity, destination FROM logistics WHERE category = 'Ammunition';
+
+-- 3. Count logistics by category
+SELECT category, COUNT(*) as logistics_count FROM logistics GROUP BY category;
+
+-- 4. Get items dispatched in last 30 days
+SELECT item_name, date_dispatched, destination FROM logistics WHERE date_dispatched > DATE_SUB(CURDATE(), INTERVAL 30 DAY);
+
+-- 5. Find high-quantity logistics
+SELECT item_name, quantity, source FROM logistics WHERE quantity > 500;
+
+-- ALTER QUERIES
+-- 1. Add priority_level column
+ALTER TABLE logistics ADD COLUMN priority_level VARCHAR(20);
+
+-- 2. Modify remarks column length
+ALTER TABLE logistics MODIFY COLUMN remarks VARCHAR(500);
+
+-- 3. Add index on category
+ALTER TABLE logistics ADD INDEX idx_logistics_category (category);
+
+-- 4. Add transport_mode column
+ALTER TABLE logistics ADD COLUMN transport_mode VARCHAR(50);
+
+-- 5. Drop received_by column
+ALTER TABLE logistics DROP COLUMN received_by;
+
+-- RENAME QUERIES
+-- 1. Rename logistics table
+RENAME TABLE logistics TO army_logistics;
+
+-- 2. Rename item_name column
+ALTER TABLE logistics CHANGE item_name supply_item VARCHAR(100);
+
+-- 3. Rename date_dispatched column
+ALTER TABLE logistics CHANGE date_dispatched dispatch_date DATE;
+
+-- 4. Rename source column
+ALTER TABLE logistics CHANGE source origin VARCHAR(100);
+
+-- 5. Rename received_by column
+ALTER TABLE logistics CHANGE received_by recipient VARCHAR(100);
+
+-- UPDATE QUERIES
+-- 1. Update priority level
+UPDATE logistics SET priority_level = 'High' WHERE category = 'Ammunition';
+
+-- 2. Update status
+UPDATE logistics SET status = 'In Transit' WHERE logistic_id = 3;
+
+-- 3. Update transport mode
+UPDATE logistics SET transport_mode = 'Air' WHERE destination LIKE '%Leh%' OR destination LIKE '%Siachen%';
+
+-- 4. Update quantity
+UPDATE logistics SET quantity = quantity - 50 WHERE logistic_id = 1;
+
+-- 5. Update received by
+UPDATE logistics SET received_by = 'Capt. A. Rawat (Unit Commander)' WHERE logistic_id = 1;
+
+-- ---------------------------------------------------
+-- TABLE 20: SUPPORT_STAFF QUERIES
+-- ---------------------------------------------------
+
+-- SELECT QUERIES
+-- 1. Get active support staff
+SELECT * FROM support_staff WHERE status = 'Active';
+
+-- 2. Find medical department staff
+SELECT name, role, contact_number FROM support_staff WHERE department = 'Medical';
+
+-- 3. Count staff by department
+SELECT department, COUNT(*) as staff_count FROM support_staff GROUP BY department;
+
+-- 4. Get staff joined in last 5 years
+SELECT name, role, join_date FROM support_staff WHERE join_date > DATE_SUB(CURDATE(), INTERVAL 5 YEAR);
+
+-- 5. Find staff on leave
+SELECT name, role, department FROM support_staff WHERE status = 'On Leave';
+
+-- ALTER QUERIES
+-- 1. Add salary column
+ALTER TABLE support_staff ADD COLUMN salary DECIMAL(10,2);
+
+-- 2. Modify role column length
+ALTER TABLE support_staff MODIFY COLUMN role VARCHAR(150);
+
+-- 3. Add index on department
+ALTER TABLE support_staff ADD INDEX idx_staff_department (department);
+
+-- 4. Add emergency_contact column
+ALTER TABLE support_staff ADD COLUMN emergency_contact VARCHAR(15);
+
+-- 5. Drop age column
+ALTER TABLE support_staff DROP COLUMN age;
+
+-- RENAME QUERIES
+-- 1. Rename support_staff table
+RENAME TABLE support_staff TO army_support_staff;
+
+-- 2. Rename role column
+ALTER TABLE support_staff CHANGE role job_title VARCHAR(100);
+
+-- 3. Rename join_date column
+ALTER TABLE support_staff CHANGE join_date employment_date DATE;
+
+-- 4. Rename contact_number column
+ALTER TABLE support_staff CHANGE contact_number phone VARCHAR(15);
+
+-- 5. Rename status column
+ALTER TABLE support_staff CHANGE status employment_status VARCHAR(50);
+
+-- UPDATE QUERIES
+-- 1. Update salary based on role
+UPDATE support_staff SET salary = 35000 WHERE role = 'Technician';
+
+-- 2. Update status
+UPDATE support_staff SET status = 'Retired' WHERE staff_id = 17;
+
+-- 3. Update email domain
+UPDATE support_staff SET email = REPLACE(email, '@army.in', '@indianarmy.gov.in');
+
+-- 4. Update department name
+UPDATE support_staff SET department = 'Medical Corps' WHERE department = 'Medical';
+
+-- 5. Update contact number format
+UPDATE support_staff SET contact_number = CONCAT('+91-', contact_number);
+
+-- ---------------------------------------------------
+-- TABLE 21: MEDICAL_RECORDS (SECOND VERSION) QUERIES
+-- ---------------------------------------------------
+
+-- SELECT QUERIES
+-- 1. Get records with high blood pressure
+SELECT * FROM medical_records WHERE blood_pressure > '130/90';
+
+-- 2. Find soldiers with perfect eyesight
+SELECT soldier_id, height_cm, weight_kg FROM medical_records WHERE eyesight = '6/6';
+
+-- 3. Count records by blood group
+SELECT blood_group, COUNT(*) as count FROM medical_records GROUP BY blood_group;
+
+-- 4. Get records with medical conditions
+SELECT soldier_id, medical_condition, last_checkup FROM medical_records WHERE medical_condition != 'None';
+
+-- 5. Find records checked in last 3 months
+SELECT soldier_id, last_checkup, doctor_name FROM medical_records WHERE last_checkup > DATE_SUB(CURDATE(), INTERVAL 3 MONTH);
+
+-- ALTER QUERIES
+-- 1. Add bmi column
+ALTER TABLE medical_records ADD COLUMN bmi DECIMAL(4,2);
+
+-- 2. Modify medical_condition column length
+ALTER TABLE medical_records MODIFY COLUMN medical_condition VARCHAR(200);
+
+-- 3. Add index on blood_group
+ALTER TABLE medical_records ADD INDEX idx_medical_blood_group (blood_group);
+
+-- 4. Add fitness_level column
+ALTER TABLE medical_records ADD COLUMN fitness_level VARCHAR(20);
+
+-- 5. Drop eyesight column
+ALTER TABLE medical_records DROP COLUMN eyesight;
+
+-- RENAME QUERIES
+-- 1. Rename medical_records table
+RENAME TABLE medical_records TO soldier_health_records;
+
+-- 2. Rename height_cm column
+ALTER TABLE medical_records CHANGE height_cm height INT;
+
+-- 3. Rename weight_kg column
+ALTER TABLE medical_records CHANGE weight_kg weight INT;
+
+-- 4. Rename last_checkup column
+ALTER TABLE medical_records CHANGE last_checkup last_medical_exam DATE;
+
+-- 5. Rename doctor_name column
+ALTER TABLE medical_records CHANGE doctor_name medical_officer VARCHAR(100);
+
+-- UPDATE QUERIES
+-- 1. Update BMI calculation
+UPDATE medical_records SET bmi = weight_kg / ((height_cm/100) * (height_cm/100));
+
+-- 2. Update fitness level based on BMI
+UPDATE medical_records SET fitness_level = 
+    CASE 
+        WHEN bmi < 18.5 THEN 'Underweight'
+        WHEN bmi BETWEEN 18.5 AND 24.9 THEN 'Normal'
+        WHEN bmi BETWEEN 25 AND 29.9 THEN 'Overweight'
+        ELSE 'Obese'
+    END;
+
+-- 3. Update last checkup date
+UPDATE medical_records SET last_checkup = CURDATE() WHERE last_checkup < '2024-01-01';
+
+-- 4. Update blood pressure format
+UPDATE medical_records SET blood_pressure = '120/80' WHERE blood_pressure IS NULL;
+
+-- 5. Update doctor name
+UPDATE medical_records SET doctor_name = 'Dr. R.K. Verma (Senior)' WHERE doctor_name = 'Dr. R.K. Verma';
+
+-- ---------------------------------------------------
+-- TABLE 22: EQUIPMENT_INVENTORY QUERIES
+-- ---------------------------------------------------
+
+-- SELECT QUERIES
+-- 1. Get equipment in good condition
+SELECT * FROM equipment_inventory WHERE condition_status = 'Good';
+
+-- 2. Find weapons in inventory
+SELECT name, quantity, location FROM equipment_inventory WHERE category = 'Weapon';
+
+-- 3. Count equipment by category
+SELECT category, COUNT(*) as equipment_count FROM equipment_inventory GROUP BY category;
+
+-- 4. Get equipment issued in 2023
+SELECT name, issue_date, location FROM equipment_inventory WHERE YEAR(issue_date) = 2023;
+
+-- 5. Find equipment needing maintenance
+SELECT name, condition_status, last_maintenance FROM equipment_inventory WHERE condition_status = 'Needs Repair';
+
+-- ALTER QUERIES
+-- 1. Add unit_cost column
+ALTER TABLE equipment_inventory ADD COLUMN unit_cost DECIMAL(10,2);
+
+-- 2. Modify supplier_name column length
+ALTER TABLE equipment_inventory MODIFY COLUMN supplier_name VARCHAR(150);
+
+-- 3. Add index on category
+ALTER TABLE equipment_inventory ADD INDEX idx_equipment_category (category);
+
+-- 4. Add depreciation_rate column
+ALTER TABLE equipment_inventory ADD COLUMN depreciation_rate DECIMAL(4,2);
+
+-- 5. Drop serial_number column
+ALTER TABLE equipment_inventory DROP COLUMN serial_number;
+
+-- RENAME QUERIES
+-- 1. Rename equipment_inventory table
+RENAME TABLE equipment_inventory TO army_equipment_inventory;
+
+-- 2. Rename name column
+ALTER TABLE equipment_inventory CHANGE name item_name VARCHAR(100);
+
+-- 3. Rename condition_status column
+ALTER TABLE equipment_inventory CHANGE condition_status equipment_condition VARCHAR(50);
+
+-- 4. Rename issue_date column
+ALTER TABLE equipment_inventory CHANGE issue_date procurement_date DATE;
+
+-- 5. Rename supplier_name column
+ALTER TABLE equipment_inventory CHANGE supplier_name vendor VARCHAR(100);
+
+-- UPDATE QUERIES
+-- 1. Update unit cost
+UPDATE equipment_inventory SET unit_cost = 50000.00 WHERE category = 'Weapon';
+
+-- 2. Update condition status
+UPDATE equipment_inventory SET condition_status = 'Excellent' WHERE equipment_id IN (2, 3, 6);
+
+-- 3. Update depreciation rate
+UPDATE equipment_inventory SET depreciation_rate = 10.00 WHERE category = 'Electronics';
+
+-- 4. Update supplier name
+UPDATE equipment_inventory SET supplier_name = 'Ordnance Factory Board (OFB)' WHERE supplier_name = 'Ordnance Factory Board';
+
+-- 5. Update last maintenance
+UPDATE equipment_inventory SET last_maintenance = CURDATE() WHERE condition_status = 'Good';
+
+-- ---------------------------------------------------
+-- TABLE 23: TRAINING_RECORDS QUERIES
+-- ---------------------------------------------------
+
+-- SELECT QUERIES
+-- 1. Get certified training records
+SELECT * FROM training_records WHERE certification_status = 'Certified';
+
+-- 2. Find training records for combat courses
+SELECT soldier_id, course_name, result FROM training_records WHERE course_name LIKE '%Combat%';
+
+-- 3. Count training by result
+SELECT result, COUNT(*) as training_count FROM training_records GROUP BY result;
+
+-- 4. Get training completed in 2023
+SELECT soldier_id, course_name, end_date FROM training_records WHERE YEAR(end_date) = 2023;
+
+-- 5. Find long duration training (>30 days)
+SELECT soldier_id, course_name, duration_days FROM training_records WHERE duration_days > 30;
+
+-- ALTER QUERIES
+-- 1. Add training_score column
+ALTER TABLE training_records ADD COLUMN training_score DECIMAL(5,2);
+
+-- 2. Modify course_name column length
+ALTER TABLE training_records MODIFY COLUMN course_name VARCHAR(150);
+
+-- 3. Add index on soldier_id
+ALTER TABLE training_records ADD INDEX idx_soldier_training (soldier_id);
+
+-- 4. Add certificate_number column
+ALTER TABLE training_records ADD COLUMN certificate_number VARCHAR(50);
+
+-- 5. Drop instructor column
+ALTER TABLE training_records DROP COLUMN instructor;
+
+-- RENAME QUERIES
+-- 1. Rename training_records table
+RENAME TABLE training_records TO soldier_training_history;
+
+-- 2. Rename course_name column
+ALTER TABLE training_records CHANGE course_name training_program VARCHAR(100);
+
+-- 3. Rename duration_days column
+ALTER TABLE training_records CHANGE duration_days program_duration INT;
+
+-- 4. Rename result column
+ALTER TABLE training_records CHANGE result training_result VARCHAR(50);
+
+-- 5. Rename certification_status column
+ALTER TABLE training_records CHANGE certification_status certificate_status VARCHAR(50);
+
+-- UPDATE QUERIES
+-- 1. Update training score
+UPDATE training_records SET training_score = 85.5 WHERE training_id = 1;
+
+-- 2. Update certification status
+UPDATE training_records SET certification_status = 'Pending' WHERE training_score < 75;
+
+-- 3. Update course name
+UPDATE training_records SET course_name = CONCAT('Advanced ', course_name) WHERE duration_days > 30;
+
+-- 4. Update instructor
+UPDATE training_records SET instructor = 'Capt. R. Thakur (Retired)' WHERE training_id = 1;
+
+-- 5. Update duration days
+UPDATE training_records SET duration_days = duration_days + 5 WHERE course_name LIKE '%Advanced%';
